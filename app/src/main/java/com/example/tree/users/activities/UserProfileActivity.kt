@@ -54,7 +54,7 @@ class UserProfileActivity : ComponentActivity() {
     }
 
     private fun navigateToBecomeWriter() {
-        val intent = Intent(this, RegisterToSeller::class.java)
+        val intent = Intent(this, RegisterToWriterActivity::class.java) // Updated class name
         startActivity(intent)
     }
 
