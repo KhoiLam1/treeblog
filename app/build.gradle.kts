@@ -8,14 +8,15 @@ plugins {
     id("com.google.gms.google-services")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("kotlin-kapt") // Add this line for Kapt
 }
 
 android {
-    namespace = "com.example.votree"
+    namespace = "com.example.tree"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.votree"
+        applicationId = "com.example.tree"
         minSdk = 29
         targetSdk = 34
         versionCode = 1
@@ -49,6 +50,10 @@ android {
         compose = true
     }
 
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.4.7" // Ensure the correct version is used
+    }
+
     sourceSets {
         getByName("main").java.srcDirs("build/generated/source/navigation-args")
     }
@@ -75,6 +80,7 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.activity.v190)
     implementation(libs.androidx.coordinatorlayout)
+    implementation(libs.androidx.runtime.livedata)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -96,7 +102,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation(libs.glide)
-    annotationProcessor(libs.compiler)
+    kapt(libs.compiler) // Ensure you are using kapt for Glide
     // Lifecycle
     implementation(libs.androidx.lifecycle.extensions)
     implementation(libs.androidx.lifecycle.common.java8)
@@ -122,16 +128,18 @@ dependencies {
     implementation(libs.androidx.viewpager2)
 
     // Compose
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.material.icons.extended)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
-
+    implementation("androidx.activity:activity-compose:1.7.2")
+    implementation(platform("androidx.compose:compose-bom:2024.02.00"))
+    implementation("androidx.compose.ui:ui:1.4.7")
+    implementation("androidx.compose.ui:ui-graphics:1.4.7")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.4.7")
+    implementation("androidx.compose.material3:material3:1.1.1")
+    implementation("androidx.compose.material:material-icons-extended:1.4.7")
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.02.00"))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.4.7")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.4.7")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.4.7")
+    implementation("com.github.bumptech.glide:glide:4.12.0")
+    kapt("com.github.bumptech.glide:compiler:4.12.0")
+    implementation("com.github.bumptech.glide:compose:1.0.0-alpha.1")
 }
