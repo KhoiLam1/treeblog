@@ -4,98 +4,84 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.compose.setContent
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Upload
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
-import com.example.tree.R
-import com.example.tree.databinding.ActivityWriteTipBinding
+import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
 import com.example.tree.tips.models.ProductTip
+import com.example.tree.users.activities.CustomGreen
 import com.example.tree.utils.AuthHandler
-import com.google.android.material.button.MaterialButton
-import com.google.firebase.Firebase
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
-class WriteTipActivity : AppCompatActivity(R.layout.activity_write_tip) {
+class WriteTipActivity : ComponentActivity() {
     private val fireStoreInstance = FirebaseFirestore.getInstance()
     private val storageInstance = FirebaseStorage.getInstance()
-    var imageUri : Uri? = null
-    val db = Firebase.firestore
+    private var imageUri: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val binding = ActivityWriteTipBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContent {
+            var pickedImageUri by remember { mutableStateOf<Uri?>(null) }
 
-        val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-            // Callback is invoked after the user selects a media item or closes the
-            // photo picker.
-            if (uri != null) {
-                Log.d("PhotoPicker", "Selected URI: $uri")
-                Toast.makeText(this, "Selected 1 image", Toast.LENGTH_SHORT).show()
-                binding.writeTipPreviewIv.setImageURI(uri)
-                imageUri = uri
-            } else {
-                Log.d("PhotoPicker", "No media selected")
-                Toast.makeText(this, "No media selected", Toast.LENGTH_SHORT).show()
+            val pickMedia = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+                if (uri != null) {
+                    Log.d("PhotoPicker", "Selected URI: $uri")
+                    Toast.makeText(this, "Selected 1 image", Toast.LENGTH_SHORT).show()
+                    pickedImageUri = uri
+                } else {
+                    Log.d("PhotoPicker", "No media selected")
+                    Toast.makeText(this, "No media selected", Toast.LENGTH_SHORT).show()
+                }
             }
-        }
 
-        // Add thumbnail button
-        findViewById<MaterialButton>(R.id.add_thumbnail_btn).setOnClickListener{
-            Log.d("PhotoPicker", "Launching photo picker")
-            pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-        }
-
-        binding.submitNewTipButton.setOnClickListener{
-            val tip = ProductTip(
-                0,
-                content=binding.tipContentInputEditText.text.toString(),
-                shortDescription=binding.tipShortDescriptionInputEditText.text.toString().replace("\\n", System.getProperty("line.separator") ?: "\n"),
-                title=binding.tipTitleInputEditText.text.toString(),
-                userId = AuthHandler.firebaseAuth.currentUser?.uid ?: "",
-                vote_count=0)
-            pushTiptoDatabase(tip)
-        }
-        binding.cancelNewTipButton.setOnClickListener{
-            finish()
+            WriteTipScreen(
+                imageUri = pickedImageUri,
+                onPickImage = { pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                onSaveTip = { tip -> uploadImageAndSaveTip(tip, pickedImageUri) },
+                onCancel = { finish() }
+            )
         }
     }
 
-    private fun pushTiptoDatabase(tip: ProductTip) {
-        if (!checkTipContent(tip)) {
+    private fun uploadImageAndSaveTip(tip: ProductTip, imageUri: Uri?) {
+        if (imageUri == null) {
+            Toast.makeText(this, "Please add an image", Toast.LENGTH_SHORT).show()
             return
         }
-        val storageRef = storageInstance.reference.child("images/productTips/${imageUri?.lastPathSegment}")
-        storageRef.putFile(imageUri!!)
+
+        val storageRef = storageInstance.reference.child("images/productTips/${imageUri.lastPathSegment}")
+        storageRef.putFile(imageUri)
             .addOnSuccessListener {
                 storageRef.downloadUrl.addOnSuccessListener { uri ->
-                    tip.imageList[0] = uri.toString()
-                    fireStoreInstance.collection("ProductTip").add(tip)
-                        .addOnSuccessListener { documentReference ->
-                            val documentId = documentReference.id
-                            lifecycleScope.launch {
-                                addFirestoreDocument("checkContent", "Please check this content (Harassment, Hate speech, Sexually explicit content, Dangerous content, not Plant-related, meaningless content and not a tip for plant should be rejected): " + "${tip.title} - ${tip.shortDescription} - ${tip.content}", documentId)
-                            }
-                            fireStoreInstance.collection("ProductTip").document(documentId)
-                                .update("id", documentId)
-                            Toast.makeText(
-                                this,
-                                "Tip sent successfully, please wait for approval",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            finish()
-                        }
-                        .addOnFailureListener {
-                            Toast.makeText(this, "Error: ${it.message}", Toast.LENGTH_SHORT)
-                                .show()
-                        }
+                    tip.imageList.add(uri.toString())
+                    saveTipToFirestore(tip)
                 }
             }
             .addOnFailureListener {
@@ -103,33 +89,173 @@ class WriteTipActivity : AppCompatActivity(R.layout.activity_write_tip) {
             }
     }
 
-    private fun checkTipContent(tip: ProductTip): Boolean {
-        if (tip.title.isEmpty() || tip.content.isEmpty() || tip.shortDescription.isEmpty()) {
-            Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
-            return false
-        }
-        if (imageUri == null) {
-            Toast.makeText(this, "Please add an image", Toast.LENGTH_SHORT).show()
-            return false
-        }
-        return true
+    private fun saveTipToFirestore(tip: ProductTip) {
+        fireStoreInstance.collection("ProductTip").add(tip)
+            .addOnSuccessListener { documentReference ->
+                val documentId = documentReference.id
+                lifecycleScope.launch {
+                    addFirestoreDocument("checkContent", "Please check this content (Harassment, Hate speech, Sexually explicit content, Dangerous content, not Plant-related, meaningless content and not a tip for plant should be rejected): " + "${tip.title} - ${tip.shortDescription} - ${tip.content}", documentId)
+                }
+                fireStoreInstance.collection("ProductTip").document(documentId)
+                    .update("id", documentId)
+                Toast.makeText(
+                    this,
+                    "Tip sent successfully, please wait for approval",
+                    Toast.LENGTH_SHORT
+                ).show()
+                finish()
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Error: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
-    suspend fun addFirestoreDocument(collectionName: String, tipContent: String, tipId: String) {
+    private suspend fun addFirestoreDocument(collectionName: String, tipContent: String, tipId: String) {
         val documentData = hashMapOf(
             "tipContent" to tipContent,
             "tipId" to tipId
         )
 
-        // Add the document to Firestore
         try {
-            withContext(Dispatchers.IO) {
-                db.collection(collectionName).add(documentData).await()
-            }
-            // Document added successfully
+            FirebaseFirestore.getInstance().collection(collectionName).add(documentData).await()
         } catch (e: Exception) {
-            // Handle any errors
             println("Error adding document: $e")
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WriteTipScreen(
+    imageUri: Uri?,
+    onPickImage: () -> Unit,
+    onSaveTip: (ProductTip) -> Unit,
+    onCancel: () -> Unit
+) {
+    var title by remember { mutableStateOf("") }
+    var shortDescription by remember { mutableStateOf("") }
+    var content by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        imageUri?.let {
+            Image(
+                painter = rememberAsyncImagePainter(it),
+                contentDescription = "Selected Image",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .padding(bottom = 16.dp)
+            )
+        } ?: Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+                .padding(bottom = 16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No Image Selected",
+                color = Color.Gray,
+                fontSize = 16.sp
+            )
+        }
+        OutlinedTextField(
+            value = title,
+            onValueChange = { title = it },
+            label = { Text("Title") },
+            modifier = Modifier.fillMaxWidth(),
+            textStyle = LocalTextStyle.current.copy(fontSize = 24.sp),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = Color(0xFF5A8659),
+                focusedLabelColor = Color(0xFF5A8659)
+            )
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = onPickImage,
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5A8659)),
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text("Add a Thumbnail", color = Color.White)
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        OutlinedTextField(
+            value = shortDescription,
+            onValueChange = { shortDescription = it },
+            label = { Text("Short Description") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 64.dp),
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
+            maxLines = 2,
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = Color(0xFF5A8659),
+                focusedLabelColor = Color(0xFF5A8659)
+            )
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        OutlinedTextField(
+            value = content,
+            onValueChange = { content = it },
+            label = { Text("Content") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 160.dp),
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
+            maxLines = 10,
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = Color(0xFF5A8659),
+                focusedLabelColor = Color(0xFF5A8659)
+            )
+        )
+        Spacer(modifier = Modifier.height(32.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            OutlinedButton(
+                onClick = onCancel,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = "Cancel",
+                    color = Color(0xFF5A8659)
+                )
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Button(
+                onClick = {
+                    val tip = ProductTip(
+                        title = title,
+                        shortDescription = shortDescription,
+                        content = content,
+                        userId = AuthHandler.firebaseAuth.currentUser?.uid ?: "",
+                        imageList = mutableListOf()
+                    )
+                    onSaveTip(tip)
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5A8659)),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Save", color = Color.White)
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewWriteTipScreen() {
+    WriteTipScreen(
+        imageUri = null,
+        onPickImage = {},
+        onSaveTip = {},
+        onCancel = {}
+    )
 }

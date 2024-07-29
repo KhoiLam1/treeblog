@@ -121,7 +121,7 @@ class RegisterToWriterActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalGlideComposeApi::class)
+@OptIn(ExperimentalGlideComposeApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterToWriterScreen(
     onImageSelected: (Uri) -> Unit,
@@ -178,8 +178,11 @@ fun RegisterToWriterScreen(
                 }
             }
             Spacer(modifier = Modifier.width(16.dp))
-            Button(onClick = { getImage.launch("image/*") }) {
-                Text("Add Author Avatar")
+            Button(
+                onClick = { getImage.launch("image/*") },
+                colors = ButtonDefaults.buttonColors(containerColor = CustomGreen)
+            ) {
+                    Text("Add Author Avatar")
             }
         }
 
@@ -187,14 +190,22 @@ fun RegisterToWriterScreen(
             value = pseudonym,
             onValueChange = { pseudonym = it },
             label = { Text("Pseudonym") },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Color(0xFF5A8659),
+                    focusedLabelColor = Color(0xFF5A8659)
+        )
         )
 
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("Author Email") },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = Color(0xFF5A8659),
+                focusedLabelColor = Color(0xFF5A8659)
+            )
         )
 
         Button(
@@ -205,6 +216,7 @@ fun RegisterToWriterScreen(
                     CustomToast.show(context, "Please fill all fields correctly", ToastType.FAILURE)
                 }
             },
+            colors = ButtonDefaults.buttonColors(containerColor = CustomGreen),
             modifier = Modifier.fillMaxWidth().padding(16.dp)
         ) {
             Text("Register")
