@@ -7,7 +7,7 @@ import kotlinx.parcelize.Parcelize
 import java.util.Date
 
 @Parcelize
-data class ProductTip(
+data class Tip(
     var approvalStatus: Int = 0,
     var content: String = "",
     @ServerTimestamp val createdAt: Date? = null,
@@ -20,7 +20,7 @@ data class ProductTip(
     var id: String = "",
 ) : Parcelable {
     override fun toString(): String {
-        return "ProductTip(approvalStatus=$approvalStatus, content='$content', createdAt=$createdAt, updatedAt=$updatedAt, imageList=$imageList, shortDescription='$shortDescription', title='$title', userId='$userId', vote=$vote_count, id='$id')"
+        return "Tip(approvalStatus=$approvalStatus, content='$content', createdAt=$createdAt, updatedAt=$updatedAt, imageList=$imageList, shortDescription='$shortDescription', title='$title', userId='$userId', vote=$vote_count, id='$id')"
     }
 }
 

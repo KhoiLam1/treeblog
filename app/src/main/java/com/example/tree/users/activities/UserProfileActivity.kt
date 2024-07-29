@@ -112,7 +112,7 @@ fun UserProfileScreen(
                         style = MaterialTheme.typography.headlineMedium
                     )
                     Text(
-                        text = if (it.role == "store") "Writer" else "User",
+                        text = if (it.role == "writer") "Writer" else "User",
                         style = MaterialTheme.typography.titleSmall
                     )
                 }

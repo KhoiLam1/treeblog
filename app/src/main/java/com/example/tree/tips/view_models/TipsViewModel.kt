@@ -4,9 +4,9 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.tree.tips.models.Author
-import com.example.tree.tips.models.ProductTip
+import com.example.tree.tips.models.Tip
 import com.example.tree.tips.models.Vote
-import com.example.tree.users.models.Store
+import com.example.tree.users.models.Writer
 import com.example.tree.users.models.User
 import com.example.tree.utils.AuthHandler
 import com.example.tree.utils.SingleLiveEvent
@@ -18,10 +18,10 @@ import com.google.firebase.firestore.toObject
 
 class TipsViewModel : ViewModel() {
     private val firestore = FirebaseFirestore.getInstance()
-    val tipList = MutableLiveData<List<ProductTip>>()
-    val topTipList = MutableLiveData<List<ProductTip>>()
+    val tipList = MutableLiveData<List<Tip>>()
+    val topTipList = MutableLiveData<List<Tip>>()
     private var tipListDocuments : QuerySnapshot? = null
-    private val collectionRef = firestore.collection("ProductTip")
+    private val collectionRef = firestore.collection("Tip")
     val sortDirection = MutableLiveData(SORT_BY_NEWEST)
 
     // Directions
@@ -37,7 +37,7 @@ class TipsViewModel : ViewModel() {
         val collectionApprovedRef = collectionRef.whereEqualTo("approvalStatus", 1)
         fun querySuccessListener(documents: QuerySnapshot) {
             tipListDocuments = documents
-            tipList.value = documents.toObjects(ProductTip::class.java)
+            tipList.value = documents.toObjects(Tip::class.java)
             Log.d("TipsViewModel", "Done getting tips")
         }
         fun queryFailListener(err: Exception){
@@ -81,7 +81,7 @@ class TipsViewModel : ViewModel() {
             .limit(5)
             .get()
             .addOnSuccessListener { documents ->
-                topTipList.value = documents.toObjects(ProductTip::class.java)
+                topTipList.value = documents.toObjects(Tip::class.java)
                 Log.d("TipsViewModel", "Done getting top tips: " + topTipList.value?.size)
             }
             .addOnFailureListener{
@@ -102,19 +102,19 @@ class TipsViewModel : ViewModel() {
                 fullname = user?.fullName ?: ""
                 avatar = user?.avatar ?: ""
                 Log.d("TipsViewModel", "Author name: $fullname and Avatar: $avatar")
-                val storeId = document.toObject<User>()?.storeId
+                val storeId = document.toObject<User>()?.writerId
                 if (storeId !== null) {
                     val storeRef = firestore.collection("stores").document(storeId)
                     storeRef.get()
                         .addOnSuccessListener { document ->
-                            val name = document.toObject<Store>()?.storeName
+                            val name = document.toObject<Writer>()?.storeName
                             storeName = name ?: ""
                             Log.d("TipsViewModel", "Writer name: $name")
                             author.value = Author(userId,fullname , storeName, avatar)
                         }
                         .addOnFailureListener { e ->
                             author.value = null
-                            Log.w("TipsViewModel", "Error getting store data", e)
+                            Log.w("TipsViewModel", "Error getting writer data", e)
                         }
                 }
                 else {
@@ -127,7 +127,7 @@ class TipsViewModel : ViewModel() {
         return author
     }
 
-    fun castVote(tip: ProductTip, isUpvote: Boolean) {
+    fun castVote(tip: Tip, isUpvote: Boolean) {
         val voteRef = collectionRef.document(tip.id).collection("votes")
         val docRef = collectionRef.document(tip.id)
         docRef.update("vote_count", FieldValue.increment(if (isUpvote) 1 else -1))
@@ -150,7 +150,7 @@ class TipsViewModel : ViewModel() {
             }
     }
 
-    fun unVoteTip(tip: ProductTip, upvote: Boolean) {
+    fun unVoteTip(tip: Tip, upvote: Boolean) {
         val docRef = collectionRef.document(tip.id)
         val voteRef = docRef.collection("votes").document((AuthHandler.firebaseAuth.currentUser!!.uid) + '_' + upvote.toString())
 

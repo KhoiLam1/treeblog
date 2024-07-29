@@ -14,7 +14,7 @@ data class User(
     var avatar: String = "",
     var phoneNumber: String = "",
     val role: String = "",
-    val storeId: String = "",
+    val writerId: String = "",
     var active: Boolean = true,
     val createdAt: Date = Date(),
     var updatedAt: Date = Date()

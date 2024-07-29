@@ -20,7 +20,7 @@ class TipListFragment : BaseListFragment<Tip>(), OnItemClickListener {
 
     override val adapter: BaseListAdapter<Tip> by lazy { TipListAdapter(this) }
     override val itemList = mutableListOf<Tip>()
-    override val collectionName = "ProductTip"
+    override val collectionName = "Tip"
     private var lastVisibleDocument: DocumentSnapshot? = null
     private val pageSize: Long = 11 // Number of items to fetch per page
 

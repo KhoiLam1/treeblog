@@ -14,6 +14,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "treeblog"
+rootProject.name = "tree"
 include(":app")
  

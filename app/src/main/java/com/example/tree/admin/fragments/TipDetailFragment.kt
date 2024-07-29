@@ -47,7 +47,7 @@ class TipDetailFragment : Fragment() {
                 .setTitle("Aprrove this tip?")
                 .setMessage("Are you sure you want to approve this tip?")
                 .setPositiveButton("Yes") { _, _ ->
-                    db.collection("ProductTip").document(tip!!.id).update("approvalStatus", 1)
+                    db.collection("Tip").document(tip!!.id).update("approvalStatus", 1)
                 }
                 .setNegativeButton("No") { _, _ -> }
                 .show()
@@ -71,7 +71,7 @@ class TipDetailFragment : Fragment() {
             buttonReject.setOnClickListener {
                 val feedback = editTextFeedback.text.toString()
                 // Perform rejection action with feedback
-                db.collection("ProductTip").document(tip!!.id).update("approvalStatus", -1, "feedback", feedback)
+                db.collection("Tip").document(tip!!.id).update("approvalStatus", -1, "feedback", feedback)
                     .addOnSuccessListener {
                         // Dismiss the dialog
                         alertDialog.dismiss()

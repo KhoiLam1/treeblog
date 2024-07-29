@@ -17,9 +17,9 @@ class UserRepository(private val db: FirebaseFirestore) {
         return snapshot.toObject(User::class.java)
     }
 
-    suspend fun getStoreId(userId: String): String {
+    suspend fun getWriterId(userId: String): String {
         val snapshot = usersCollection.document(userId).get().await()
-        return snapshot.getString("storeId") ?:""
+        return snapshot.getString("writerId") ?:""
     }
 
     fun getUserWithCallback(userId: String, callback: (User?) -> Unit) {
@@ -60,19 +60,19 @@ class UserRepository(private val db: FirebaseFirestore) {
         usersCollection.document(userId).update("avatar", avatarUrl).await()
     }
 
-    suspend fun updateToStore(userId: String, storeId: String) {
+    suspend fun updateToStore(userId: String, writerId: String) {
         usersCollection.document(userId).update(
             mapOf(
-                "storeId" to storeId,
-                "role" to "store"
+                "writerId" to writerId,
+                "role" to "writer"
             )
         ).await()
     }
 
-    suspend fun getUserByStoreId(storeId: String): User? {
+    suspend fun getUserByWriterId(writerId: String): User? {
         return withContext(Dispatchers.IO) {
             val snapshot = usersCollection
-                .whereEqualTo("storeId", storeId)
+                .whereEqualTo("writerId", writerId)
                 .limit(1)
                 .get()
                 .await()

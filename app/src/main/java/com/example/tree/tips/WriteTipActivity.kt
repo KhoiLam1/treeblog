@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import coil.compose.rememberAsyncImagePainter
-import com.example.tree.tips.models.ProductTip
+import com.example.tree.tips.models.Tip
 import com.example.tree.utils.AuthHandler
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -61,7 +61,7 @@ class WriteTipActivity : ComponentActivity() {
         }
     }
 
-    private fun uploadImageAndSaveTip(tip: ProductTip, imageUri: Uri?) {
+    private fun uploadImageAndSaveTip(tip: Tip, imageUri: Uri?) {
         if (imageUri == null) {
             Toast.makeText(this, "Please add an image", Toast.LENGTH_SHORT).show()
             return
@@ -80,14 +80,14 @@ class WriteTipActivity : ComponentActivity() {
             }
     }
 
-    private fun saveTipToFirestore(tip: ProductTip) {
-        fireStoreInstance.collection("ProductTip").add(tip)
+    private fun saveTipToFirestore(tip: Tip) {
+        fireStoreInstance.collection("Tip").add(tip)
             .addOnSuccessListener { documentReference ->
                 val documentId = documentReference.id
                 lifecycleScope.launch {
                     addFirestoreDocument("checkContent", "Please check this content (Harassment, Hate speech, Sexually explicit content, Dangerous content, not Plant-related, meaningless content and not a tip for plant should be rejected): " + "${tip.title} - ${tip.shortDescription} - ${tip.content}", documentId)
                 }
-                fireStoreInstance.collection("ProductTip").document(documentId)
+                fireStoreInstance.collection("Tip").document(documentId)
                     .update("id", documentId)
                 Toast.makeText(
                     this,
@@ -120,7 +120,7 @@ class WriteTipActivity : ComponentActivity() {
 fun WriteTipScreen(
     imageUri: Uri?,
     onPickImage: () -> Unit,
-    onSaveTip: (ProductTip) -> Unit,
+    onSaveTip: (Tip) -> Unit,
     onCancel: () -> Unit
 ) {
     var title by remember { mutableStateOf("") }
@@ -222,7 +222,7 @@ fun WriteTipScreen(
             Spacer(modifier = Modifier.width(16.dp))
             Button(
                 onClick = {
-                    val tip = ProductTip(
+                    val tip = Tip(
                         title = title,
                         shortDescription = shortDescription,
                         content = content,

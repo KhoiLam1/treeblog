@@ -9,13 +9,13 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.tree.R
-import com.example.tree.tips.models.ProductTip
+import com.example.tree.tips.models.Tip
 import com.example.tree.tips.onProductTipClickListener
 import com.google.android.material.textview.MaterialTextView
 
 class TipAdapter(
     private val listener: onProductTipClickListener
-) : ListAdapter<ProductTip, TipAdapter.ProductTipViewHolder>(ProductTipComparators()) {
+) : ListAdapter<Tip, TipAdapter.ProductTipViewHolder>(ProductTipComparators()) {
 
 
 
@@ -47,11 +47,11 @@ class TipAdapter(
         }
     }
 
-    class ProductTipComparators : DiffUtil.ItemCallback<ProductTip>() {
-        override fun areItemsTheSame(oldItem: ProductTip, newItem: ProductTip): Boolean {
+    class ProductTipComparators : DiffUtil.ItemCallback<Tip>() {
+        override fun areItemsTheSame(oldItem: Tip, newItem: Tip): Boolean {
             return oldItem === newItem
         }
-        override fun areContentsTheSame(oldItem: ProductTip, newItem: ProductTip): Boolean {
+        override fun areContentsTheSame(oldItem: Tip, newItem: Tip): Boolean {
             return oldItem == newItem
         }
     }
