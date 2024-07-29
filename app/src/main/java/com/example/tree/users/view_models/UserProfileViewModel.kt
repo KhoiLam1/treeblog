@@ -19,4 +19,7 @@ class UserProfileViewModel(private val userRepository: UserRepository) : ViewMod
             _isLoading.value = false
         }
     }
+    fun updateUser(user: User) {
+        _user.value = user
+    }
 }
