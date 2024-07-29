@@ -2,9 +2,9 @@ package com.example.tree.tips
 
 import android.content.Context
 import android.speech.tts.TextToSpeech
-import java.util.Locale
+import java.util.*
 
-class TextToSpeechHelper(private val context: Context) : TextToSpeech.OnInitListener {
+class TextToSpeechHelper(context: Context) : TextToSpeech.OnInitListener {
 
     private var textToSpeech: TextToSpeech? = null
 

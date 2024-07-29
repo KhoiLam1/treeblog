@@ -144,4 +144,11 @@ dependencies {
     implementation("com.github.bumptech.glide:compose:1.0.0-alpha.1")
     // Coil for Jetpack Compose
     implementation("io.coil-kt:coil-compose:2.0.0")
+    // Hilt dependencies
+    implementation("com.google.dagger:hilt-android:2.38.1")
+    kapt("com.google.dagger:hilt-android-compiler:2.38.1")
+
+    // Hilt Jetpack Compose integration
+    implementation("androidx.hilt:hilt-navigation-compose:1.0.0-alpha03")
+    kapt("androidx.hilt:hilt-compiler:1.0.0")
 }

@@ -10,7 +10,7 @@ import com.example.tree.users.models.User
 import com.example.tree.utils.AuthHandler
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.toObject
+import com.google.firebase.firestore.ktx.toObject
 
 class CommentViewModel : ViewModel() {
     private val firestore = FirebaseFirestore.getInstance()
@@ -26,11 +26,11 @@ class CommentViewModel : ViewModel() {
         )
         commentRef.add(comment)
             .addOnSuccessListener {
-                Log.d("CommentViewModel", "[Comment] Comment added to database" + comment.toString())
+                Log.d("CommentViewModel", "[Comment] Comment added to database: $comment")
                 queryComments(tip)
             }
             .addOnFailureListener { e ->
-                Log.w("CommentViewModel", "[Comment] Error adding comment to database" + comment.toString())
+                Log.w("CommentViewModel", "[Comment] Error adding comment to database: $comment", e)
             }
     }
 
@@ -46,28 +46,26 @@ class CommentViewModel : ViewModel() {
             .addOnSuccessListener { documents ->
                 val queriedComments = documents.toObjects(Comment::class.java)
                 var counter = 0
-                for (i in queriedComments.indices){
+                for (i in queriedComments.indices) {
                     userRef.document(queriedComments[i].userId).get()
                         .addOnSuccessListener { document ->
                             counter++
                             queriedComments[i].fullName = document.toObject<User>()?.fullName ?: ""
                             queriedComments[i].avatar = document.toObject<User>()?.avatar ?: ""
-                            Log.d("CommentViewModel", "Comment $i: " + queriedComments[i].toString())
-                            if (counter == queriedComments.size){
+                            Log.d("CommentViewModel", "Comment $i: ${queriedComments[i]}")
+                            if (counter == queriedComments.size) {
                                 Log.d("CommentViewModel", "Comment list updated")
                                 _commentList.value = queriedComments
                             }
                         }
-                        .addOnFailureListener{
+                        .addOnFailureListener {
                             Log.d("CommentViewModel", "Error getting author name and avatar: ", it)
                         }
-
                 }
                 Log.d("CommentViewModel", "Done getting comments")
             }
-            .addOnFailureListener{
+            .addOnFailureListener {
                 Log.d("CommentViewModel", "Error getting comments: ", it)
             }
-        return
     }
 }

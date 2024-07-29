@@ -1,175 +1,226 @@
 package com.example.tree.tips
 
-import android.content.Intent
 import android.os.Bundle
-import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.Toast
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.bumptech.glide.Glide
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.viewModels
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import coil.compose.rememberAsyncImagePainter
 import com.example.tree.R
-import com.example.tree.databinding.FragmentTipDetailBinding
-import com.example.tree.tips.adapters.TipCommentAdapter
 import com.example.tree.tips.models.ProductTip
 import com.example.tree.tips.view_models.CommentViewModel
 import com.example.tree.tips.view_models.TipsViewModel
-import com.google.android.material.button.MaterialButtonToggleGroup
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-class TipDetailFragment : Fragment(), MaterialButtonToggleGroup.OnButtonCheckedListener {
-    private val viewModel: TipsViewModel by viewModels()
+@Suppress("DEPRECATION")
+class TipDetailActivity : ComponentActivity() {
+    private val tipsViewModel: TipsViewModel by viewModels()
     private val commentViewModel: CommentViewModel by viewModels()
-    private val commentAdapter = TipCommentAdapter()
-    private var textToSpeechHelper: TextToSpeechHelper? = null
-    private var isPlaying = false
-    private lateinit var binding: FragmentTipDetailBinding
-    private val args : TipDetailFragmentArgs by navArgs()
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        binding = FragmentTipDetailBinding.inflate(layoutInflater)
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        val tipData = getTipData()
-        setupToolbar()
-        setupData(tipData)
-        setupComments()
-
-        binding.tipDetailCommentRecyclerView.adapter = commentAdapter
-        binding.tipDetailCommentRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
-        commentViewModel.queryComments(getTipData())
-        commentViewModel.commentList.observe(viewLifecycleOwner){
-            Log.d("TipDetailFragment", "Comment list updated")
-            commentAdapter.submitList(it)
-        }
-
-        textToSpeechHelper = TextToSpeechHelper(requireContext())
-
-        val titleText = binding.tipDetailTitleTextView
-        val authorText = binding.tipDetailAuthorTextView
-        val detailContent = binding.tipDetailContentTextView
-        val icSpeaker = binding.textToSpeechButton
-
-        icSpeaker.setOnClickListener {
-            if (isPlaying) {
-                icSpeaker.setImageResource(R.drawable.ic_speaker_idle)
-                textToSpeechHelper?.stop()
-            }
-            else {
-                icSpeaker.setImageResource(R.drawable.ic_speaker_playing)
-                textToSpeechHelper?.speak(titleText.text.toString(), authorText.text.toString(), detailContent.text.toString())
-            }
-            isPlaying = !isPlaying
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            TipDetailScreen(tip = intent.getParcelableExtra("tipData")!!, tipsViewModel, commentViewModel)
         }
     }
+}
 
-    override fun onPause() {
-        super.onPause()
-        textToSpeechHelper?.shutdown()
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TipDetailScreen(tip: ProductTip, tipsViewModel: TipsViewModel, commentViewModel: CommentViewModel) {
+    val comments by commentViewModel.commentList.observeAsState(emptyList())
+
+    LaunchedEffect(tip) {
+        commentViewModel.queryComments(tip)
     }
 
-    private fun setupData(tipData: ProductTip){
-        binding.tipDetailTitleTextView.text = tipData.title
-        binding.tipDetailContentTextView.text = tipData.content
-        val sdf = SimpleDateFormat("MMM dd yyyy", Locale.ENGLISH)
-        val formattedDate = tipData.createdAt?.let { sdf.format(it) + "  |  "} + tipData.vote_count.toString() + " votes"
-        binding.tipDetailDateTextView.text = formattedDate
+    var newComment by remember { mutableStateOf(TextFieldValue("")) }
+    var isPlaying by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val textToSpeechHelper = remember { TextToSpeechHelper(context) }
 
-        val tipBtnGroup : MaterialButtonToggleGroup = binding.tipVotingSystem.root
-        viewModel.getIsUpvoted(tipData.id).observe(viewLifecycleOwner){
-            if (it !== null) {
-                if (it) tipBtnGroup.check(R.id.tip_detail_upvote_btn)
-                else tipBtnGroup.check(R.id.tip_detail_downvote_btn)
-            }
-            tipBtnGroup.addOnButtonCheckedListener(this)
-        }
-
-        Glide.with(requireContext())
-            .load(tipData.imageList[0])
-            .placeholder(R.drawable.img_placeholder)
-            .into(binding.tipDetailImageView)
-
-        viewModel.getAuthor(tipData.userId).observe(viewLifecycleOwner){
-            if (it === null) return@observe
-            binding.tipDetailAuthorTextView.text = it.fullName
-            binding.tipDetailStoreTextView.text = it.storeName
-            if (it.avatar.isNotBlank())
-            Glide.with(requireContext())
-                .load(it.avatar)
-                .placeholder(R.drawable.img_placeholder)
-                .into(binding.tipDetailAvatarImageView)
-            else binding.tipDetailAvatarImageView.visibility = View.GONE
-        }
-
+    DisposableEffect(Unit) {
+        onDispose { textToSpeechHelper.shutdown() }
     }
 
-    private fun setupComments(){
-        val comment = binding.tipDetailCommentEditText
-        val commentBtn = binding.tipDetailSendCommentBtn
-        commentBtn.setOnClickListener{
-            val commentContent = comment.text.toString()
-            if (commentContent.isNotBlank()){
-                commentViewModel.castComment(getTipData(), commentContent)
-                comment.text?.clear()
-            }
-            else{
-                Toast.makeText(requireContext(), "Comment cannot be empty", Toast.LENGTH_SHORT).show()
-            }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Tip Details") },
+                navigationIcon = {
+                    IconButton(onClick = { /* Handle back navigation */ }) {
+                        Icon(painter = painterResource(id = R.drawable.arrow_back_24px), contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White,
+                    titleContentColor = Color.Black,
+                    navigationIconContentColor = Color.Black
+                )
+            )
         }
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp)
+        ) {
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
 
-    }
+                // Tip Image
+                Image(
+                    painter = rememberAsyncImagePainter(tip.imageList[0]),
+                    contentDescription = "Tip image",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .padding(bottom = 16.dp)
+                )
 
-    private fun setupToolbar() {
-        binding.tipDetailToolbar.inflateMenu(R.menu.tip_detail_overflow)
-        binding.tipDetailToolbar.setNavigationOnClickListener {
-            findNavController().navigateUp()
-        }
-        binding.tipDetailToolbar.setOnMenuItemClickListener {
-            when(it.itemId) {
-                R.id.tip_detail_action_report -> {
-                    val newIntent = Intent(requireContext(), TipReportActivity::class.java)
-
-                    val tipData = getTipData()
-                    newIntent.putExtra("tipData", tipData)
-                    startActivity(newIntent)
-                    true
+                // Title and Speaker Icon
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = tip.title,
+                        style = MaterialTheme.typography.headlineMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(onClick = {
+                        if (isPlaying) {
+                            textToSpeechHelper.stop()
+                        } else {
+                            textToSpeechHelper.speak(tip.title, "Author", tip.content)
+                        }
+                        isPlaying = !isPlaying
+                    }) {
+                        Icon(
+                            painter = painterResource(id = if (isPlaying) R.drawable.ic_speaker_playing else R.drawable.ic_speaker_idle),
+                            contentDescription = "Speaker"
+                        )
+                    }
                 }
-                else -> false
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Voting Buttons
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Button(onClick = { tipsViewModel.castVote(tip, true) }) {
+                        Text(text = "Upvote")
+                    }
+                    Button(onClick = { tipsViewModel.castVote(tip, false) }) {
+                        Text(text = "Downvote")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Author Info
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painter = rememberAsyncImagePainter(tip.imageList[0]),
+                        contentDescription = "Author Avatar",
+                        modifier = Modifier
+                            .size(40.dp)
+                            .padding(end = 8.dp)
+                    )
+                    Column {
+                        Text(text = "", style = MaterialTheme.typography.bodyLarge)
+                        Text(text = "", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    val sdf = SimpleDateFormat("MMM dd yyyy", Locale.ENGLISH)
+                    val formattedDate = tip.createdAt?.let { sdf.format(it) + "  |  " } + tip.vote_count.toString() + " votes"
+                    Text(text = formattedDate, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Content
+                Text(
+                    text = tip.content,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+
+                // Comments Section
+                Text(text = "Comments", style = MaterialTheme.typography.titleSmall, color = Color.Gray)
+
+                // Add Comment Input
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    BasicTextField(
+                        value = newComment,
+                        onValueChange = { newComment = it },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(8.dp)
+                            .background(Color.LightGray, shape = MaterialTheme.shapes.small)
+                            .padding(8.dp),
+                        decorationBox = { innerTextField ->
+                            if (newComment.text.isEmpty()) {
+                                Text("Share your thought...", color = Color.Gray)
+                            }
+                            innerTextField()
+                        }
+                    )
+                    IconButton(onClick = {
+                        commentViewModel.castComment(tip, newComment.text)
+                        newComment = TextFieldValue("")
+                    }) {
+                        Icon(painter = painterResource(id = R.drawable.send_48px), contentDescription = "Send Comment")
+                    }
+                }
+            }
+
+            // Display Comments
+            items(comments) { comment ->
+                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    Text(text = comment.fullName, style = MaterialTheme.typography.bodyLarge)
+                    Text(text = comment.content, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                }
             }
         }
     }
+}
 
-    private fun getTipData() : ProductTip{
-        return args.tipData
-    }
-
-    override fun onButtonChecked(p0: MaterialButtonToggleGroup?, p1: Int, p2: Boolean) {
-        when(p1){
-            R.id.tip_detail_upvote_btn -> {
-                if (p2) viewModel.castVote(getTipData(), true)
-                else viewModel.unVoteTip(getTipData(), true)
-                Log.d("TipDetailFragment", "Upvote button clicked" + p2.toString())
-
-            }
-            R.id.tip_detail_downvote_btn -> {
-                if (p2) viewModel.castVote(getTipData(), false)
-                else viewModel.unVoteTip(getTipData(), false)
-                Log.d("TipDetailFragment", "Downvote button clicked" + p2.toString())
-            }
-        }
-    }
+@Preview(showBackground = true)
+@Composable
+fun TipDetailScreenPreview() {
+    val sampleTip = ProductTip(
+        id = "1",
+        title = "Sample Tip",
+        content = "This is a sample tip content.",
+        imageList = listOf("https://via.placeholder.com/150").toMutableList(),
+        createdAt = null,
+        updatedAt = null,
+        shortDescription = "Sample short description",
+        userId = "1",
+        vote_count = 100
+    )
+    TipDetailScreen(tip = sampleTip, tipsViewModel = TipsViewModel(), commentViewModel = CommentViewModel())
 }
