@@ -17,7 +17,7 @@ data class User (
     var avatar: String,
     var active: Boolean,
     var role: String,
-    var storeId: String,
+    var writerId: String,
     var createdAt: Date = Date(),
     var updatedAt: Date = Date(),
     var announcedMessage: String = ""
@@ -52,7 +52,7 @@ data class User (
             parcel.writeString(avatar)
             parcel.writeBoolean(active)
             parcel.writeString(role)
-            parcel.writeString(storeId)
+            parcel.writeString(writerId)
             parcel.writeLong(createdAt.time)
             parcel.writeLong(updatedAt.time)
             parcel.writeString(announcedMessage)

@@ -12,6 +12,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
 
+@Suppress("DEPRECATION")
 class CommentViewModel : ViewModel() {
     private val firestore = FirebaseFirestore.getInstance()
     private val _commentList = MutableLiveData<List<Comment>>()

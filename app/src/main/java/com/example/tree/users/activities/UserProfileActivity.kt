@@ -18,7 +18,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -28,17 +27,16 @@ import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.example.tree.R
+import com.example.tree.ui.theme.TreeTheme
 import com.example.tree.users.factories.UserProfileViewModelFactory
+import com.example.tree.users.models.User
 import com.example.tree.users.repositories.UserRepository
 import com.example.tree.users.view_models.UserProfileViewModel
-import com.example.tree.users.models.User
 import com.example.tree.utils.ProgressDialogUtils
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-
+import java.util.*
 
 class UserProfileActivity : ComponentActivity() {
 
@@ -54,11 +52,13 @@ class UserProfileActivity : ComponentActivity() {
         userProfileViewModel.loadUserProfile(userId)
 
         setContent {
-            UserProfileScreen(
-                viewModel = userProfileViewModel,
-                onLogout = { navigateLogout() },
-                onBecomeSeller = { navigateToBecomeWriter() }
-            )
+            TreeTheme {
+                UserProfileScreen(
+                    viewModel = userProfileViewModel,
+                    onLogout = { navigateLogout() },
+                    onBecomeWriter = { navigateToBecomeWriter() }
+                )
+            }
         }
     }
 
@@ -79,7 +79,7 @@ class UserProfileActivity : ComponentActivity() {
 fun UserProfileScreen(
     viewModel: UserProfileViewModel,
     onLogout: () -> Unit,
-    onBecomeSeller: () -> Unit
+    onBecomeWriter: () -> Unit
 ) {
     val user by viewModel.user.observeAsState()
     val isLoading by viewModel.isLoading.observeAsState(false)
@@ -161,7 +161,7 @@ fun UserProfileScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         IconButton(
-                            onClick = { onBecomeSeller() },
+                            onClick = { onBecomeWriter() },
                             modifier = Modifier
                                 .background(Color(0xFF5A8659), CircleShape)
                         ) {
@@ -213,7 +213,7 @@ fun UserProfileDetails(user: User) {
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = White)
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             ProfileDetailRow(iconRes = R.drawable.ic_username, label = "User Name", value = user.username)
@@ -273,13 +273,13 @@ fun UserProfileScreenPreview() {
         createdAt = mockDate,
         avatar = "",  // Set to null to simulate missing avatar
         fullName = "John Doe",
-        role = "store"
+        role = "writer"
     )
 
     UserProfileScreen(
         viewModel = PreviewUserProfileViewModel(mockUser),
         onLogout = {},
-        onBecomeSeller = {}
+        onBecomeWriter = {}
     )
 }
 

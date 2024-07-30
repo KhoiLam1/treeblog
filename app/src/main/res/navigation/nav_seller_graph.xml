@@ -2,30 +2,22 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    app:startDestination="@id/main_tip_fragment"
-    android:id="@+id/nav_seller_graph">
+    app:startDestination="@id/main_tip_fragment">
 
     <fragment
         android:id="@+id/main_tip_fragment"
         android:name="com.example.tree.tips.TipMainScreenFragment"
         android:label="Tips Main Screen"
-        tools:layout="@layout/fragment_tip_main_screen" >
+        tools:layout="@layout/fragment_tip_main_screen">
         <action
             android:id="@+id/action_main_tip_fragment_to_tipDetailFragment2"
             app:destination="@id/tipDetailFragment2" />
     </fragment>
 
     <fragment
-        android:id="@+id/user_profile_fragment"
-        android:name="com.example.tree.users.fragments.UserProfileFragment"
-        android:label="User Profile"
-        tools:layout="@layout/fragment_user_profile"
-        >
-    </fragment>
-    <fragment
         android:id="@+id/tipDetailFragment2"
         android:name="com.example.tree.tips.TipDetailFragment"
-        android:label="TipDetailFragment" >
+        android:label="Tip Detail Fragment">
         <argument
             android:name="tipData"
             app:argType="com.example.tree.tips.models.Tip" />
