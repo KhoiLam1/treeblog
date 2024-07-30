@@ -23,7 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.tree.R
-import com.example.tree.tips.models.ProductTip
+import com.example.tree.tips.models.Tip
 import com.example.tree.tips.view_models.CommentViewModel
 import com.example.tree.tips.view_models.TipsViewModel
 import java.text.SimpleDateFormat
@@ -44,7 +44,7 @@ class TipDetailActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TipDetailScreen(tip: ProductTip, tipsViewModel: TipsViewModel, commentViewModel: CommentViewModel) {
+fun TipDetailScreen(tip: Tip, tipsViewModel: TipsViewModel, commentViewModel: CommentViewModel) {
     val comments by commentViewModel.commentList.observeAsState(emptyList())
 
     LaunchedEffect(tip) {
@@ -211,7 +211,7 @@ fun TipDetailScreen(tip: ProductTip, tipsViewModel: TipsViewModel, commentViewMo
 @Preview(showBackground = true)
 @Composable
 fun TipDetailScreenPreview() {
-    val sampleTip = ProductTip(
+    val sampleTip = Tip(
         id = "1",
         title = "Sample Tip",
         content = "This is a sample tip content.",

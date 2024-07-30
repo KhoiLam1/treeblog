@@ -16,3 +16,4 @@
 local.properties
 apis.properties
 /google-services.json
+.aider*

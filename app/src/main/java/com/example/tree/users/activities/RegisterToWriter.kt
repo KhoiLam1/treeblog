@@ -7,14 +7,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,8 +27,8 @@ import androidx.compose.ui.unit.sp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.example.tree.R
-import com.example.tree.users.models.Store
-import com.example.tree.users.repositories.StoreRepository
+import com.example.tree.users.models.Writer
+import com.example.tree.users.repositories.WriterRepository
 import com.example.tree.users.repositories.UserRepository
 import com.example.tree.utils.CustomToast
 import com.example.tree.utils.ProgressDialogUtils
@@ -48,7 +44,7 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 
 class RegisterToWriterActivity : ComponentActivity() {
-    private val storeRepository = StoreRepository()
+    private val writerRepository = WriterRepository()
     private val storageReference = FirebaseStorage.getInstance().getReference("images/storeAvatars")
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,7 +52,7 @@ class RegisterToWriterActivity : ComponentActivity() {
         setContent {
             RegisterToWriterScreen(
                 onImageSelected = { uri -> uploadImageToFirebase(uri) },
-                onRegisterClicked = { avatarUrl, pseudonym, email -> createNewStore(avatarUrl, pseudonym, email) }
+                onRegisterClicked = { avatarUrl, pseudonym, email -> createNewWriter(avatarUrl, pseudonym, email) }
             )
         }
     }
@@ -87,8 +83,8 @@ class RegisterToWriterActivity : ComponentActivity() {
         }
     }
 
-    private fun createNewStore(avatarUrl: String, pseudonym: String, email: String) {
-        val store = Store(
+    private fun createNewWriter(avatarUrl: String, pseudonym: String, email: String) {
+        val writer = Writer(
             id = "",
             storeName = pseudonym,
             storeEmail = email,
@@ -99,10 +95,10 @@ class RegisterToWriterActivity : ComponentActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val userId = Firebase.auth.currentUser?.uid ?: ""
-                storeRepository.createNewStore(store, userId)
+                writerRepository.createNewWriter(writer, userId)
 
                 val userRepository = UserRepository(Firebase.firestore)
-                userRepository.updateToStore(userId, store.id)
+                userRepository.updateToStore(userId, writer.id)
                 userRepository.updateAvatar(userId, avatarUrl)
 
                 runOnUiThread {
@@ -114,7 +110,7 @@ class RegisterToWriterActivity : ComponentActivity() {
                 }
             } catch (e: Exception) {
                 runOnUiThread {
-                    CustomToast.show(this@RegisterToWriterActivity, "Failed to create store: ${e.message}", ToastType.FAILURE)
+                    CustomToast.show(this@RegisterToWriterActivity, "Failed to create writer: ${e.message}", ToastType.FAILURE)
                 }
             }
         }

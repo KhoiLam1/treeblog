@@ -16,7 +16,7 @@ import com.example.tree.R
 import com.example.tree.databinding.FragmentTipMainScreenBinding
 import com.example.tree.tips.adapters.TipAdapter
 import com.example.tree.tips.adapters.TipCarouselAdapter
-import com.example.tree.tips.models.ProductTip
+import com.example.tree.tips.models.Tip
 import com.example.tree.tips.view_models.TipsViewModel
 import com.example.tree.utils.AuthHandler
 import com.example.tree.utils.RoleManagement
@@ -25,7 +25,7 @@ import com.google.android.material.carousel.CarouselSnapHelper
 import com.google.android.material.carousel.HeroCarouselStrategy
 
 interface onProductTipClickListener {
-    fun onProductTipClick(productTip: ProductTip)
+    fun onProductTipClick(tip: Tip)
 }
 
 class TipMainScreenFragment : Fragment(), onProductTipClickListener {
@@ -74,7 +74,7 @@ class TipMainScreenFragment : Fragment(), onProductTipClickListener {
 
     private fun setupFabButton(binding: FragmentTipMainScreenBinding) {
         RoleManagement.checkUserRole(AuthHandler.firebaseAuth) {
-            if (it == "store") {
+            if (it == "writer") {
                 binding.fabNavWriteTipAction.visibility = View.VISIBLE
                 binding.fabNavWriteTipAction.setOnClickListener {
                     val intent = Intent(requireContext(), WriteTipActivity::class.java)
@@ -144,8 +144,8 @@ class TipMainScreenFragment : Fragment(), onProductTipClickListener {
         viewModel.queryTopTips()
     }
 
-    override fun onProductTipClick(productTip: ProductTip) {
-        val destination = TipMainScreenFragmentDirections.actionMainTipFragmentToTipDetailFragment2(productTip)
+    override fun onProductTipClick(tip: Tip) {
+        val destination = TipMainScreenFragmentDirections.actionMainTipFragmentToTipDetailFragment2(tip)
         findNavController().navigate(destination)
     }
 }

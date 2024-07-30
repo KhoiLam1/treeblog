@@ -5,7 +5,7 @@ import kotlinx.parcelize.Parcelize
 import java.util.Date
 
 @Parcelize
-data class Store(
+data class Writer(
     var id: String = "",
     val storeName: String = "",
     var storeAvatar: String = "",

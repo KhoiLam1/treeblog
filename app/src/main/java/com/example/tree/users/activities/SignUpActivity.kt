@@ -96,7 +96,7 @@ class SignUpActivity : ComponentActivity() {
                 startActivity(intent)
             }
             .addOnFailureListener { exception ->
-                //Toast.makeText(this, "Failed to create user: ${exception.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Failed to create user: ${exception.message}", Toast.LENGTH_SHORT).show()
             }
     }
 

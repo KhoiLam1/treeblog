@@ -28,6 +28,6 @@
         android:label="TipDetailFragment" >
         <argument
             android:name="tipData"
-            app:argType="com.example.tree.tips.models.ProductTip" />
+            app:argType="com.example.tree.tips.models.Tip" />
     </fragment>
 </navigation>

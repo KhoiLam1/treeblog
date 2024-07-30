@@ -5,7 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.tree.tips.models.Comment
-import com.example.tree.tips.models.ProductTip
+import com.example.tree.tips.models.Tip
 import com.example.tree.users.models.User
 import com.example.tree.utils.AuthHandler
 import com.google.firebase.firestore.FirebaseFirestore
@@ -17,8 +17,8 @@ class CommentViewModel : ViewModel() {
     private val _commentList = MutableLiveData<List<Comment>>()
     val commentList: LiveData<List<Comment>> = _commentList
 
-    fun castComment(tip: ProductTip, content: String) {
-        val tipRef = firestore.collection("ProductTip")
+    fun castComment(tip: Tip, content: String) {
+        val tipRef = firestore.collection("Tip")
         val commentRef = tipRef.document(tip.id).collection("comments")
         val comment = Comment(
             userId = AuthHandler.firebaseAuth.currentUser?.uid!!,
@@ -34,8 +34,8 @@ class CommentViewModel : ViewModel() {
             }
     }
 
-    fun queryComments(tip: ProductTip) {
-        val tipsRef = firestore.collection("ProductTip")
+    fun queryComments(tip: Tip) {
+        val tipsRef = firestore.collection("Tip")
         val commentRef = tipsRef.document(tip.id).collection("comments")
         val userRef = firestore.collection("users")
 
