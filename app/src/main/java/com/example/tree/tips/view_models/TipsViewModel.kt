@@ -89,47 +89,50 @@ class TipsViewModel : ViewModel() {
             }
     }
 
-    fun getAuthor(userId : String) : SingleLiveEvent<Author?> {
-        val author = SingleLiveEvent<Author?>()
+    val authorLiveData = MutableLiveData<Author?>()
+
+    fun getAuthor(userId: String) {
         val userRef = firestore.collection("users").document(userId)
 
-        var fullname = ""
-        var storeName = ""
-        var avatar = ""
         userRef.get()
             .addOnSuccessListener { document ->
                 val user = document.toObject<User>()
-                fullname = user?.fullName ?: ""
-                avatar = user?.avatar ?: ""
-                Log.d("TipsViewModel", "Author name: $fullname and Avatar: $avatar")
-                val storeId = document.toObject<User>()?.writerId
-                if (storeId !== null) {
-                    val storeRef = firestore.collection("stores").document(storeId)
-                    storeRef.get()
-                        .addOnSuccessListener { document ->
-                            val name = document.toObject<Writer>()?.storeName
-                            storeName = name ?: ""
-                            Log.d("TipsViewModel", "Writer name: $name")
-                            author.value = Author(userId,fullname , storeName, avatar)
+                val fullname = user?.fullName ?: ""
+                val avatar = user?.avatar ?: ""
+                val writerId = user?.writerId
+
+                if (writerId != null) {
+                    val writerRef = firestore.collection("writers").document(writerId)
+                    writerRef.get()
+                        .addOnSuccessListener { writerDocument ->
+                            val writerName = writerDocument.toObject<Writer>()?.writerName ?: ""
+                            authorLiveData.value = Author(userId, fullname, writerName, avatar)
                         }
                         .addOnFailureListener { e ->
-                            author.value = null
                             Log.w("TipsViewModel", "Error getting writer data", e)
+                            authorLiveData.value = null
                         }
-                }
-                else {
-                    author.value = Author(userId, fullname, storeName, avatar)
+                } else {
+                    authorLiveData.value = Author(userId, fullname, "", avatar)
                 }
             }
             .addOnFailureListener { e ->
                 Log.w("TipsViewModel", "Error getting user data", e)
+                authorLiveData.value = null
             }
-        return author
     }
 
     fun castVote(tip: Tip, isUpvote: Boolean) {
         val voteRef = collectionRef.document(tip.id).collection("votes")
         val docRef = collectionRef.document(tip.id)
+
+        // Check if the current user is authenticated and tip.id is not null
+        val currentUser = AuthHandler.firebaseAuth.currentUser
+        if (currentUser == null || tip.id.isNullOrEmpty()) {
+            Log.w("TipsViewModel", "User not authenticated or tip ID is null")
+            return
+        }
+
         docRef.update("vote_count", FieldValue.increment(if (isUpvote) 1 else -1))
             .addOnSuccessListener {
                 Log.d("TipsViewModel", "[Vote] vote_count updated:" + if (isUpvote) "+1" else "-1")
@@ -137,22 +140,29 @@ class TipsViewModel : ViewModel() {
             .addOnFailureListener { e ->
                 Log.w("TipsViewModel", "[Vote] Error updating vote_count ", e)
             }
+
         val vote = Vote(
-            userId = AuthHandler.firebaseAuth.currentUser?.uid!!,
+            userId = currentUser.uid,
             upvote = isUpvote,
         )
-        voteRef.document(AuthHandler.firebaseAuth.currentUser?.uid!! + '_' + isUpvote.toString()).set(vote)
+        voteRef.document(currentUser.uid + "_vote").set(vote)
             .addOnSuccessListener {
-                Log.d("TipsViewModel", "[Vote] Vote added to database" + vote.toString())
+                Log.d("TipsViewModel", "[Vote] Vote added to database: $vote")
             }
             .addOnFailureListener { e ->
-                Log.w("TipsViewModel", "[Vote] Error adding vote to database" + vote.toString())
+                Log.w("TipsViewModel", "[Vote] Error adding vote to database: $vote", e)
             }
     }
 
     fun unVoteTip(tip: Tip, upvote: Boolean) {
+        val currentUser = AuthHandler.firebaseAuth.currentUser
+        if (currentUser == null) {
+            Log.w("TipsViewModel", "User not authenticated")
+            return
+        }
+
         val docRef = collectionRef.document(tip.id)
-        val voteRef = docRef.collection("votes").document((AuthHandler.firebaseAuth.currentUser!!.uid) + '_' + upvote.toString())
+        val voteRef = docRef.collection("votes").document(currentUser.uid + '_' + upvote.toString())
 
         voteRef.get().addOnSuccessListener {
             voteRef.delete()
@@ -162,7 +172,7 @@ class TipsViewModel : ViewModel() {
                 .addOnFailureListener { e ->
                     Log.w("TipsViewModel", "[Unvote] Error removing vote from database", e)
                 }
-            if (upvote)
+            if (upvote) {
                 docRef.update("vote_count", FieldValue.increment(-1))
                     .addOnSuccessListener {
                         Log.d("TipsViewModel", "[Unvote] vote_count updated")
@@ -170,7 +180,7 @@ class TipsViewModel : ViewModel() {
                     .addOnFailureListener { e ->
                         Log.w("TipsViewModel", "[Unvote] Error updating vote_count ", e)
                     }
-            else
+            } else {
                 docRef.update("vote_count", FieldValue.increment(1))
                     .addOnSuccessListener {
                         Log.d("TipsViewModel", "[Unvote] vote_count updated")
@@ -178,14 +188,22 @@ class TipsViewModel : ViewModel() {
                     .addOnFailureListener { e ->
                         Log.w("TipsViewModel", "[Unvote] Error updating vote_count ", e)
                     }
+            }
+        }.addOnFailureListener { e ->
+            Log.w("TipsViewModel", "[Unvote] Error getting vote", e)
         }
     }
 
-    fun getIsUpvoted(tipId: String): SingleLiveEvent<Boolean?> {
-        val isUpvoted = SingleLiveEvent<Boolean?>()
+    fun getIsUpvoted(tipId: String): MutableLiveData<Boolean?> {
+        val isUpvoted = MutableLiveData<Boolean?>()
         val voteRef = collectionRef.document(tipId).collection("votes")
+        val currentUser = AuthHandler.firebaseAuth.currentUser
+        if (currentUser == null) {
+            isUpvoted.value = null
+            return isUpvoted
+        }
         voteRef
-            .whereEqualTo("userId", AuthHandler.firebaseAuth.currentUser?.uid)
+            .whereEqualTo("userId", currentUser.uid)
             .limit(1)
             .get()
             .addOnSuccessListener { document ->
@@ -195,7 +213,7 @@ class TipsViewModel : ViewModel() {
                 }
                 isUpvoted.value = document.toObjects(Vote::class.java)[0].upvote
             }
-            .addOnFailureListener{
+            .addOnFailureListener {
                 isUpvoted.value = null
             }
         return isUpvoted

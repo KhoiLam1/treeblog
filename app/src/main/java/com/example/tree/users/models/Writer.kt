@@ -7,15 +7,15 @@ import java.util.Date
 @Parcelize
 data class Writer(
     var id: String = "",
-    val storeName: String = "",
-    var storeAvatar: String = "",
-    val storeEmail: String = "",
-    val storePhoneNumber: String = "",
+    val writerName: String = "",
+    var writerAvatar: String = "",
+    val writerEmail: String = "",
+    val writerPhoneNumber: String = "",
     var active: Boolean = true,
     val createdAt: Date = Date(),
     var updatedAt: Date = Date()
 ) : Parcelable {
     override fun toString(): String {
-        return "Writer(id=$id, storeName=$storeName)"
+        return "Writer(id=$id, storeName=$writerName)"
     }
 }

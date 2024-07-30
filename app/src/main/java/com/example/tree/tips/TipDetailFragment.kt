@@ -1,15 +1,23 @@
 package com.example.tree.tips
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -23,9 +31,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.tree.R
+import com.example.tree.tips.models.Author
 import com.example.tree.tips.models.Tip
 import com.example.tree.tips.view_models.CommentViewModel
 import com.example.tree.tips.view_models.TipsViewModel
+import com.example.tree.users.activities.CustomGreen
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -36,16 +46,30 @@ class TipDetailActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            TipDetailScreen(tip = intent.getParcelableExtra("tipData")!!, tipsViewModel, commentViewModel)
+
+        val tip = intent.getParcelableExtra<Tip>("tipData")!!
+
+        // Observe Author LiveData
+        tipsViewModel.authorLiveData.observe(this) { author ->
+            if (author != null) {
+                setContent {
+                    TipDetailScreen(tip = tip, author = author, tipsViewModel = tipsViewModel, commentViewModel = commentViewModel)
+                }
+            } else {
+                // Handle error case, maybe show a message
+            }
         }
+
+        // Fetch the author data
+        tipsViewModel.getAuthor(tip.userId)
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TipDetailScreen(tip: Tip, tipsViewModel: TipsViewModel, commentViewModel: CommentViewModel) {
+fun TipDetailScreen(tip: Tip, author: Author, tipsViewModel: TipsViewModel, commentViewModel: CommentViewModel) {
     val comments by commentViewModel.commentList.observeAsState(emptyList())
+    val isUpvoted by tipsViewModel.getIsUpvoted(tip.id).observeAsState()
 
     LaunchedEffect(tip) {
         commentViewModel.queryComments(tip)
@@ -60,13 +84,16 @@ fun TipDetailScreen(tip: Tip, tipsViewModel: TipsViewModel, commentViewModel: Co
         onDispose { textToSpeechHelper.shutdown() }
     }
 
+    var upvoted by remember { mutableStateOf(isUpvoted == true) }
+    var downvoted by remember { mutableStateOf(isUpvoted == false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Tip Details") },
                 navigationIcon = {
                     IconButton(onClick = { /* Handle back navigation */ }) {
-                        Icon(painter = painterResource(id = R.drawable.arrow_back_24px), contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -86,13 +113,13 @@ fun TipDetailScreen(tip: Tip, tipsViewModel: TipsViewModel, commentViewModel: Co
             item {
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Tip Image
+                // Display Image from imageList
                 Image(
                     painter = rememberAsyncImagePainter(tip.imageList[0]),
-                    contentDescription = "Tip image",
+                    contentDescription = "Tip Image",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
+                        .aspectRatio(16 / 9f) // Adjust the aspect ratio as needed
                         .padding(bottom = 16.dp)
                 )
 
@@ -125,30 +152,97 @@ fun TipDetailScreen(tip: Tip, tipsViewModel: TipsViewModel, commentViewModel: Co
                 // Voting Buttons
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(0.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Button(onClick = { tipsViewModel.castVote(tip, true) }) {
-                        Text(text = "Upvote")
+                    OutlinedButton(
+                        onClick = {
+                            if (!upvoted) {
+                                upvoted = true
+                                downvoted = false
+                                tipsViewModel.castVote(tip, true)
+                            } else {
+                                upvoted = false
+                                tipsViewModel.unVoteTip(tip, true)
+                            }
+                            Log.d("TipDetailScreen", "Upvote button clicked: $upvoted")
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp),
+                        shape = RoundedCornerShape(
+                            topStart = 24.dp,
+                            bottomStart = 24.dp,
+                            topEnd = 0.dp,
+                            bottomEnd = 0.dp
+                        ),
+                        border = BorderStroke(1.dp, Color.Gray),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = if (upvoted) CustomGreen else Color.White,
+                            contentColor = if (upvoted) Color.White else Color.Black
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowUpward,
+                            contentDescription = "Upvote Arrow",
+                            tint = if (upvoted) Color.White else Color.Black,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(text = if (upvoted) "Unvote" else "Upvote", color = if (upvoted) Color.White else Color.Black)
                     }
-                    Button(onClick = { tipsViewModel.castVote(tip, false) }) {
-                        Text(text = "Downvote")
+                    OutlinedButton(
+                        onClick = {
+                            if (!downvoted) {
+                                downvoted = true
+                                upvoted = false
+                                tipsViewModel.castVote(tip, false)
+                            } else {
+                                downvoted = false
+                                tipsViewModel.unVoteTip(tip, false)
+                            }
+                            Log.d("TipDetailScreen", "Downvote button clicked: $downvoted")
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp),
+                        shape = RoundedCornerShape(
+                            topStart = 0.dp,
+                            bottomStart = 0.dp,
+                            topEnd = 24.dp,
+                            bottomEnd = 24.dp
+                        ),
+                        border = BorderStroke(1.dp, Color.Gray),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = if (downvoted) Color.Red else Color.White,
+                            contentColor = if (downvoted) Color.White else Color.Black
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowDownward,
+                            contentDescription = "Downvote Arrow",
+                            tint = if (downvoted) Color.White else Color.Black,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(text = if (downvoted) "Unvote" else "Downvote", color = if (downvoted) Color.White else Color.Black)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // Author Info
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(
-                        painter = rememberAsyncImagePainter(tip.imageList[0]),
+                        painter = rememberAsyncImagePainter(author.avatar),
                         contentDescription = "Author Avatar",
                         modifier = Modifier
                             .size(40.dp)
                             .padding(end = 8.dp)
                     )
                     Column {
-                        Text(text = "", style = MaterialTheme.typography.bodyLarge)
-                        Text(text = "", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        Text(text = author.fullName, style = MaterialTheme.typography.bodyLarge)
+                        Text(text = author.writerName, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     val sdf = SimpleDateFormat("MMM dd yyyy", Locale.ENGLISH)
@@ -192,7 +286,7 @@ fun TipDetailScreen(tip: Tip, tipsViewModel: TipsViewModel, commentViewModel: Co
                         commentViewModel.castComment(tip, newComment.text)
                         newComment = TextFieldValue("")
                     }) {
-                        Icon(painter = painterResource(id = R.drawable.send_48px), contentDescription = "Send Comment")
+                        Icon(Icons.Default.Send, contentDescription = "Send Comment")
                     }
                 }
             }
@@ -207,7 +301,6 @@ fun TipDetailScreen(tip: Tip, tipsViewModel: TipsViewModel, commentViewModel: Co
         }
     }
 }
-
 @Preview(showBackground = true)
 @Composable
 fun TipDetailScreenPreview() {
@@ -215,12 +308,17 @@ fun TipDetailScreenPreview() {
         id = "1",
         title = "Sample Tip",
         content = "This is a sample tip content.",
-        imageList = listOf("https://via.placeholder.com/150").toMutableList(),
+        imageList = listOf("https://via.placeholder.com/200").toMutableList(),
         createdAt = null,
         updatedAt = null,
-        shortDescription = "Sample short description",
         userId = "1",
         vote_count = 100
     )
-    TipDetailScreen(tip = sampleTip, tipsViewModel = TipsViewModel(), commentViewModel = CommentViewModel())
+    val sampleAuthor = Author(
+        userId = "1",
+        fullName = "John",
+        writerName = "John Nguyen",
+        avatar = "https://via.placeholder.com/40"
+    )
+    TipDetailScreen(tip = sampleTip, author = sampleAuthor, tipsViewModel = TipsViewModel(), commentViewModel = CommentViewModel())
 }

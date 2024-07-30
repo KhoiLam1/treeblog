@@ -24,14 +24,15 @@ data class Tip(
     }
 }
 
+@Parcelize
 data class Author(
     val userId: String = "",
     val fullName: String = "",
-    val storeName: String = "",
-    val avatar: String = "",
-) {
+    val writerName: String = "",
+    val avatar: String = ""
+) : Parcelable {
     override fun toString(): String {
-        return "Author(userId='$userId', fullName='$fullName', storeName='$storeName')"
+        return "Author(userId='$userId', fullName='$fullName', writerName='$writerName')"
     }
 }
 

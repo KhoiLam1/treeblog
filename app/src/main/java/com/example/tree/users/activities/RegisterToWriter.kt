@@ -86,10 +86,10 @@ class RegisterToWriterActivity : ComponentActivity() {
     private fun createNewWriter(avatarUrl: String, pseudonym: String, email: String) {
         val writer = Writer(
             id = "",
-            storeName = pseudonym,
-            storeEmail = email,
-            storePhoneNumber = "",
-            storeAvatar = avatarUrl
+            writerName = pseudonym,
+            writerEmail = email,
+            writerPhoneNumber = "",
+            writerAvatar = avatarUrl
         )
 
         CoroutineScope(Dispatchers.IO).launch {
