@@ -20,7 +20,7 @@ import com.bumptech.glide.Glide
 import com.example.tree.R
 import com.example.tree.admin.activities.AdminMainActivity
 import com.example.tree.models.CheckContent
-import com.example.tree.models.Store
+import com.example.tree.models.Writer
 import com.example.tree.models.Tip
 import com.example.tree.models.User
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -157,14 +157,14 @@ class TipDetailFragment : Fragment() {
                             .load(user?.avatar)
                             .into(it)
                     }
-                    if (user?.storeId != "")
-                        view?.findViewById<TextView>(R.id.storeName)?.text = user?.storeId
+                    if (user?.writerId != "")
+                        view?.findViewById<TextView>(R.id.storeName)?.text = user?.writerId
                     else
-                    db.collection("stores").document(user.storeId!!)
+                    db.collection("writers").document(user.writerId!!)
                         .get()
                         .addOnSuccessListener { storeDoc ->
-                            val store = storeDoc.toObject(Store::class.java)
-                            view?.findViewById<TextView>(R.id.storeName)?.text = store?.storeName
+                            val writer = storeDoc.toObject(Writer::class.java)
+                            view?.findViewById<TextView>(R.id.storeName)?.text = writer?.writerName
                         }
                 }
 
