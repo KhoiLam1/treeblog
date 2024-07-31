@@ -1,6 +1,7 @@
 package com.example.tree.admin.activities
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -25,39 +26,53 @@ import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getContextForLanguage
+import androidx.core.content.ContextCompat.startActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.FragmentManager
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.compose.TreeTheme
 import com.example.tree.R
 import com.example.tree.admin.fragments.TipListFragment
-import com.example.tree.admin.interfaces.OnItemClickListener
+import com.example.tree.admin.fragments.TipListScreen
+import com.example.tree.ui.MyAlertDialog
 import com.example.tree.users.activities.SignInActivity
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 @Suppress("DEPRECATION")
-class AdminMainActivity : AppCompatActivity(), OnItemClickListener, SearchView.OnQueryTextListener {
+class AdminMainActivity : AppCompatActivity(), SearchView.OnQueryTextListener {
 
     private val CALL_PHONE_PERMISSION_REQUEST_CODE = 1
 //    private lateinit var drawerLayout: DrawerLayout
@@ -92,7 +107,7 @@ class AdminMainActivity : AppCompatActivity(), OnItemClickListener, SearchView.O
         }
         return setContent {
             TreeTheme {
-                AdminMainScreen()
+                AdminMainScreen(this)
             }
         }
 
@@ -159,19 +174,6 @@ class AdminMainActivity : AppCompatActivity(), OnItemClickListener, SearchView.O
 //        supportFragmentManager.removeOnBackStackChangedListener(backStackListener)
 //        super.onDestroy()
 //    }
-
-    override fun onItemClicked(view: View?, position: Int) {}
-
-    override fun onTipItemClicked(view: View?, position: Int) {
-        val topAppBar: MaterialToolbar = findViewById(R.id.topAppBar)
-        topAppBar.setNavigationIcon(R.drawable.icon_back)
-        topAppBar.menu.findItem(R.id.search).isVisible = false
-        topAppBar.setNavigationOnClickListener {
-            supportFragmentManager.popBackStack()
-        }
-    }
-
-    override fun searchItem(query: String) {}
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
 
@@ -255,92 +257,76 @@ class AdminMainActivity : AppCompatActivity(), OnItemClickListener, SearchView.O
 //    }
 
     fun handleLogout(){
-        MaterialAlertDialogBuilder(this)
-            .setTitle("Log Out")
-            .setMessage("Are you sure you want to log out?")
-            .setPositiveButton("Yes") { _, _ ->
-                SignInActivity().signOut()
-                val intent = Intent(this, SignInActivity::class.java)
-                startActivity(intent)
-            }
-            .setNegativeButton("No") { dialog, _ ->
-                dialog.dismiss()
-            }
-            .show()
+
     }
 
 }
 @Composable
-fun AdminMainScreen() {
+fun AdminMainScreen(context: Context) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
     ModalNavigationDrawer(
         drawerContent = {
-            DrawerContent()
+            DrawerContent(context)
         },
         drawerState = drawerState,
         content = {
-            MainContent()
+            MainContent(drawerState, scope)
         }
     )
 }
 
 @Composable
-fun DrawerContent() {
+fun DrawerContent(context: Context) {
+    val logoutDialogState = remember { mutableStateOf(false) }
+
+    if (logoutDialogState.value) {
+        MyAlertDialog(shouldShowDialog = logoutDialogState, onConfirm = {
+            SignInActivity().signOut()
+            val intent = Intent(context, SignInActivity::class.java)
+            context.startActivity(intent)
+        }) {}
+    }
+
     ModalDrawerSheet {
-        Column(Modifier.verticalScroll(rememberScrollState())) {
             Spacer(Modifier.height(12.dp))
             NavigationDrawerItem(
-                icon = { Icon(painterResource(R.drawable.baseline_logout_24), contentDescription = null) },
+                icon = { Icon(painterResource(R.drawable.baseline_logout_24), contentDescription = null, tint = Color.Black) },
                 label = { Text("Logout") },
-                onClick = { AdminMainActivity().handleLogout() },
+                onClick = { logoutDialogState.value = true },
                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
                 selected = false,
             )
-        }
-    }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .padding(16.dp)
-    ) {
-        Text("Header", style = TextStyle(fontSize = 24.sp, color = Color.Black))
-        Spacer(modifier = Modifier.height(16.dp))
-        // Add more navigation items here
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainContent() {
-    ConstraintLayout(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
-        val (appBar, content) = createRefs()
+fun MainContent(drawerState: DrawerState, scope : CoroutineScope) {
+    Scaffold(topBar = {
+        MyTopAppBar(navigationIcon = {
+            IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                Icon(
+                    painterResource(id = R.drawable.icon_menu),
+                    contentDescription = "Menu",
+                    tint = Color.Black
+                )
+            }
+        }
+        )
+    }) { innerPadding ->
+        val navController = rememberNavController()
 
-        MyTopAppBar()
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 56.dp) // TopAppBar height
-                .constrainAs(content) {
-                    top.linkTo(appBar.bottom)
-                    bottom.linkTo(parent.bottom)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                }
-        ) {
-            // Add your content here
+        NavHost(navController, "admin_tip_list", modifier = Modifier.padding(innerPadding)){
+            composable("admin_tip_list"){
+                Log.d("AdminMainActivity", "Navigating Admin Tip List")
+                TipListScreen() }
         }
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewMyApp() {
-    AdminMainScreen()
-}
+//
+//@PreviewParameter(getContextForLanguage())
+//@Composable
+//fun PreviewMyApp(context: Context) {
+//    AdminMainScreen(this)
+//}

@@ -3,6 +3,7 @@ package com.example.tree
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
@@ -60,6 +61,7 @@ class MainActivity : FragmentActivity() {
         RoleManagement.checkUserRole(AuthHandler.firebaseAuth) { role ->
             when (role) {
                 "admin" -> {
+                    Log.d("MainActivity", "Switching to Admin")
                     val intent = Intent(this, AdminMainActivity::class.java)
                     startActivity(intent)
                     finish()
