@@ -37,6 +37,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class UserProfileActivity : ComponentActivity() {
 
@@ -63,7 +64,7 @@ class UserProfileActivity : ComponentActivity() {
     }
 
     private fun navigateToBecomeWriter() {
-        val intent = Intent(this, RegisterToWriterActivity::class.java) // Updated class name
+        val intent = Intent(this, RegisterToWriterActivity::class.java)
         startActivity(intent)
     }
 
@@ -92,6 +93,8 @@ fun UserProfileScreen(
     }
 
     user?.let {
+        val accountAgeDays = getAccountAgeDays(it.createdAt)
+        val canBecomeWriter = accountAgeDays >= 30
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -161,9 +164,10 @@ fun UserProfileScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         IconButton(
-                            onClick = { onBecomeWriter() },
+                            onClick = { if (canBecomeWriter) onBecomeWriter() },
+                            enabled = canBecomeWriter,
                             modifier = Modifier
-                                .background(Color(0xFF5A8659), CircleShape)
+                                .background(if (canBecomeWriter) Color(0xFF5A8659) else Color.Gray, CircleShape)
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_unfold),
@@ -174,7 +178,8 @@ fun UserProfileScreen(
                         Text(
                             text = "Up to Writer",
                             style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.padding(top = 4.dp)
+                            modifier = Modifier.padding(top = 4.dp),
+                            color = if (canBecomeWriter) Color.Black else Color.Gray
                         )
                     }
                 }
@@ -204,6 +209,12 @@ fun UserProfileScreen(
             )
         }
     }
+}
+
+fun getAccountAgeDays(createdAt: Date): Long {
+    val currentDate = Date()
+    val diff = currentDate.time - createdAt.time
+    return TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS)
 }
 
 @Composable

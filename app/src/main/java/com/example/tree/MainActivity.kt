@@ -3,71 +3,58 @@ package com.example.tree
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.view.View
-import android.widget.Toast
+import androidx.activity.compose.setContent
+import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+//noinspection UsingMaterialAndMaterial3Libraries
+import androidx.compose.material.BottomNavigation
+//noinspection UsingMaterialAndMaterial3Libraries
+import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.navigation.findNavController
-import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.setupWithNavController
+import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.commit
+import androidx.navigation.NavController
+import androidx.navigation.compose.*
 import com.example.tree.admin.activities.AdminMainActivity
-import com.example.tree.databinding.ActivityMainBinding
 import com.example.tree.ui.theme.TreeTheme
+import com.example.tree.users.activities.UserProfileScreen
 import com.example.tree.utils.AuthHandler
 import com.example.tree.utils.PermissionManager
 import com.example.tree.utils.RoleManagement
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import com.example.tree.tips.TipMainScreenFragment
 import com.example.tree.users.activities.UserProfileActivity
+import com.google.accompanist.insets.ProvideWindowInsets
+import com.google.accompanist.insets.systemBarsPadding
 
-
-
-class MainActivity : AppCompatActivity() {
+class MainActivity : FragmentActivity() {
 
     private lateinit var permissionManager: PermissionManager
-    private lateinit var binding: ActivityMainBinding
-    private val bottomNavigation by lazy { findViewById<BottomNavigationView>(R.id.bottom_navigation_view) }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Initialize View Binding
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
         // Check user authentication
         checkUserAuthentication()
-
-        // Handle system bars
-        handleSystemBars()
 
         // Check permissions
         setupPermissions()
 
         // Check user role and setup navigation
         setupUserRole()
-
-        // Setup bottom navigation view
-        setupBottomNavigation()
-    }
-
-    override fun onSupportNavigateUp(): Boolean {
-        val navController = findNavController(R.id.main_navigation_fragment)
-        return navController.navigateUp() || super.onSupportNavigateUp()
     }
 
     private fun checkUserAuthentication() {
@@ -85,14 +72,6 @@ class MainActivity : AppCompatActivity() {
         permissionManager.checkPermissions()
     }
 
-    private fun handleSystemBars() {
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main_activity_layout)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
-            insets
-        }
-    }
-
     private fun setupUserRole() {
         RoleManagement.checkUserRole(AuthHandler.firebaseAuth) { role ->
             when (role) {
@@ -102,98 +81,123 @@ class MainActivity : AppCompatActivity() {
                     finish()
                 }
                 else -> {
-                    Toast.makeText(this, "Welcome ${AuthHandler.firebaseAuth.currentUser?.displayName}", Toast.LENGTH_SHORT).show()
-                    setupNavigation()
-                }
-            }
-        }
-    }
-
-    private fun setupNavigation() {
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.main_navigation_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
-        navController.setGraph(R.navigation.nav_seller_graph)
-        bottomNavigation.inflateMenu(R.menu.nav_seller)
-
-        val showDestinations = setOf(
-            R.id.main_tip_fragment
-        )
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            bottomNavigation.visibility = if (destination.id in showDestinations) {
-                View.VISIBLE
-            } else {
-                View.GONE
-            }
-        }
-
-        bottomNavigation.setupWithNavController(navController)
-    }
-
-    private fun setupBottomNavigation() {
-        bottomNavigation.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.user_profile_fragment -> {
-                    val intent = Intent(this, UserProfileActivity::class.java)
-                    startActivity(intent)
-                    true
-                }
-                else -> {
-                    val navController = findNavController(R.id.main_navigation_fragment)
-                    navController.navigate(item.itemId)
-                    true
-                }
-            }
-        }
-    }
-
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    fun MainActivityContent(startDestination: String = "main_tip") {
-        TreeTheme {
-            val navController = rememberNavController()
-            Scaffold(
-                topBar = { TopAppBar(title = { Text("Main Activity") }) },
-                content = { paddingValues ->
-                    NavHost(
-                        navController = navController,
-                        startDestination = startDestination,
-                        Modifier.padding(paddingValues)
-                    ) {
-                        composable("main_tip") { MainTipScreen(navController) }
-                        composable("user_profile") { UserProfileScreen() }
+                    setContent {
+                        TreeTheme {
+                            ProvideWindowInsets {
+                                MainScreen()
+                            }
+                        }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun MainScreen() {
+    val navController = rememberNavController()
+    Scaffold(
+        bottomBar = {
+            BottomNavigationBar(navController)
+        }
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = "main_tip_fragment",
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable("main_tip_fragment") { TipMainScreenFragmentContainer() }
+            composable("user_profile_fragment") { UserProfileFragment() }
+        }
+    }
+}
+
+@Composable
+fun TipMainScreenFragmentContainer() {
+    val context = LocalContext.current
+    val activity = context as FragmentActivity
+    AndroidView(factory = { ctx ->
+        androidx.fragment.app.FragmentContainerView(ctx).apply {
+            id = ViewCompat.generateViewId()
+            activity.supportFragmentManager.commit {
+                replace(id, TipMainScreenFragment())
+            }
+        }
+    })
+}
+
+@Composable
+fun UserProfileFragment() {
+    val context = LocalContext.current
+    val intent = Intent(context, UserProfileActivity::class.java)
+    context.startActivity(intent)
+}
+
+@Composable
+fun BottomNavigationBar(navController: NavController) {
+    val items = listOf(
+        NavigationItem("main_tip_fragment", "Tips", R.drawable.plant_tip),
+        NavigationItem("user_profile_fragment", "Your Profile", R.drawable.person_24px)
+    )
+
+    BottomNavigation(
+        backgroundColor = Color(0xFFE8EDE5)
+    ) {
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
+
+        items.forEach { item ->
+            val selected = currentRoute == item.route
+            val tintColor = if (selected) Color.White else Color.Black
+            val backgroundColor = if (selected) Color.Green else Color.Transparent
+
+            BottomNavigationItem(
+                selected = selected,
+                onClick = {
+                    navController.navigate(item.route) {
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                icon = {
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .background(color = backgroundColor, shape = CircleShape)
+                    ) {
+                        Icon(
+                            painterResource(id = item.icon),
+                            contentDescription = item.label,
+                            tint = tintColor,
+                            modifier = Modifier
+                                .padding(4.dp)
+                                .size(16.dp)
+                        )
+                    }
+                },
+                label = {
+                    Text(
+                        item.label,
+                        color = tintColor
+                    )
+                },
+                alwaysShowLabel = true
             )
         }
     }
+}
 
-    @Composable
-    fun MainTipScreen(navController: NavController) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Text(text = "Main Tip Screen")
-            Button(onClick = { navController.navigate("user_profile") }) {
-                Text("Go to User Profile")
-            }
-        }
-    }
 
-    @Composable
-    fun UserProfileScreen() {
-        val context = LocalContext.current
-        Column(modifier = Modifier.fillMaxSize()) {
-            Text(text = "User Profile Screen")
-            Button(onClick = {
-                val intent = Intent(context, UserProfileActivity::class.java)
-                context.startActivity(intent)
-            }) {
-                Text("Open User Profile Activity")
-            }
-        }
-    }
-
-    @Preview(showBackground = true)
-    @Composable
-    fun MainActivityContentPreview() {
-        MainActivityContent()
+@Preview(showBackground = true)
+@Composable
+fun MainScreenPreview() {
+    TreeTheme {
+        MainScreen()
     }
 }
+
+data class NavigationItem(val route: String, val label: String, @DrawableRes val icon: Int)

@@ -1,4 +1,3 @@
-
 package com.example.tree.tips
 
 import android.content.Intent
@@ -7,7 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.widget.PopupMenu
+import android.widget.PopupMenu
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -29,20 +28,24 @@ interface onProductTipClickListener {
 }
 
 class TipMainScreenFragment : Fragment(), onProductTipClickListener {
+
     private val viewModel: TipsViewModel by viewModels()
-    private lateinit var adapter :  TipAdapter
-    private lateinit var carouselAdapter : TipCarouselAdapter
+    private lateinit var adapter: TipAdapter
+    private lateinit var carouselAdapter: TipCarouselAdapter
+    private var _binding: FragmentTipMainScreenBinding? = null
+    private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val binding = FragmentTipMainScreenBinding.inflate(inflater, container, false)
-        setupRecyclerView(binding)
-        setupCarousel(binding)
-        setupFabButton(binding)
-        setupSortChip(binding, savedInstanceState)
-        return binding.root
+        _binding = FragmentTipMainScreenBinding.inflate(inflater, container, false)
+        val rootView = binding.root
+        setupRecyclerView()
+        setupCarousel()
+        setupFabButton()
+        setupSortChip(savedInstanceState)
+        return rootView
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -55,24 +58,23 @@ class TipMainScreenFragment : Fragment(), onProductTipClickListener {
         }
     }
 
-    private fun setupRecyclerView(binding: FragmentTipMainScreenBinding) {
+    private fun setupRecyclerView() {
         adapter = TipAdapter(this)
         binding.tipRecyclerView.adapter = adapter
         binding.tipRecyclerView.layoutManager =
             LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
     }
 
-    private fun setupCarousel(binding: FragmentTipMainScreenBinding) {
+    private fun setupCarousel() {
         carouselAdapter = TipCarouselAdapter(this)
-        val carouselRecyclerView = binding.carouselRecyclerView
-        carouselRecyclerView.layoutManager = CarouselLayoutManager(HeroCarouselStrategy())
-        carouselRecyclerView.adapter = carouselAdapter
-        carouselRecyclerView.setHasFixedSize(true)
+        binding.carouselRecyclerView.layoutManager = CarouselLayoutManager(HeroCarouselStrategy())
+        binding.carouselRecyclerView.adapter = carouselAdapter
+        binding.carouselRecyclerView.setHasFixedSize(true)
         val snapHelper = CarouselSnapHelper()
-        snapHelper.attachToRecyclerView(carouselRecyclerView)
+        snapHelper.attachToRecyclerView(binding.carouselRecyclerView)
     }
 
-    private fun setupFabButton(binding: FragmentTipMainScreenBinding) {
+    private fun setupFabButton() {
         RoleManagement.checkUserRole(AuthHandler.firebaseAuth) {
             if (it == "writer") {
                 binding.fabNavWriteTipAction.visibility = View.VISIBLE
@@ -86,7 +88,7 @@ class TipMainScreenFragment : Fragment(), onProductTipClickListener {
         }
     }
 
-    private fun setupSortChip(binding: FragmentTipMainScreenBinding, savedInstanceState: Bundle?) {
+    private fun setupSortChip(savedInstanceState: Bundle?) {
         val sortChip = binding.tipsSortChip
         val popupMenu = PopupMenu(requireContext(), sortChip)
         popupMenu.menuInflater.inflate(R.menu.tip_sort_options, popupMenu.menu)
@@ -107,7 +109,7 @@ class TipMainScreenFragment : Fragment(), onProductTipClickListener {
         binding.tipsSortChip.chipIcon = resources.getDrawable(defaultSortDirectionIcon, context?.theme)
         binding.tipsSortChip.text = defaultSortText
 
-        sortChip.setOnClickListener{
+        sortChip.setOnClickListener {
             Log.d("TipMainScreenFragment", "Sort chip clicked")
             popupMenu.show()
         }
@@ -115,7 +117,7 @@ class TipMainScreenFragment : Fragment(), onProductTipClickListener {
         popupMenu.setOnMenuItemClickListener {
             binding.tipsSortChip.text = popupMenu.menu.findItem(it.itemId).title
             binding.tipsSortChip.chipIcon = popupMenu.menu.findItem(it.itemId).icon
-            when(it.itemId){
+            when(it.itemId) {
                 R.id.sort_by_newest -> {
                     viewModel.sortDirection.value = TipsViewModel.SORT_BY_NEWEST
                     savedInstanceState?.putInt("sortDirectionId", TipsViewModel.SORT_BY_NEWEST)
@@ -144,8 +146,14 @@ class TipMainScreenFragment : Fragment(), onProductTipClickListener {
         viewModel.queryTopTips()
     }
 
+
     override fun onProductTipClick(tip: Tip) {
         val destination = TipMainScreenFragmentDirections.actionMainTipFragmentToTipDetailFragment2(tip)
         findNavController().navigate(destination)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
