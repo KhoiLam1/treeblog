@@ -1,161 +1,245 @@
 package com.example.tree.tips
 
 import android.content.Intent
-import android.os.Bundle
-import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.PopupMenu
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.example.tree.R
-import com.example.tree.databinding.FragmentTipMainScreenBinding
-import com.example.tree.tips.adapters.TipAdapter
-import com.example.tree.tips.adapters.TipCarouselAdapter
 import com.example.tree.tips.models.Tip
 import com.example.tree.tips.view_models.TipsViewModel
-import com.example.tree.ui.Screen
-import com.example.tree.utils.AuthHandler
-import com.example.tree.utils.RoleManagement
-import com.google.android.material.carousel.CarouselLayoutManager
-import com.google.android.material.carousel.CarouselSnapHelper
-import com.google.android.material.carousel.HeroCarouselStrategy
 
-interface onProductTipClickListener {
-    fun onProductTipClick(tip: Tip)
+@Composable
+fun TipMainScreen(
+    viewModel: TipsViewModel,
+    onProductTipClick: (Tip) -> Unit,
+    onFabClick: () -> Unit
+) {
+    val topTipList by viewModel.topTipList.observeAsState(emptyList())
+    val tipList by viewModel.tipList.observeAsState(emptyList())
+    val sortDirection by viewModel.sortDirection.observeAsState(TipsViewModel.SORT_BY_NEWEST)
+    val user by viewModel.user.observeAsState()
+
+    Scaffold(
+        floatingActionButton = {
+            user?.let {
+                if (it.role == "writer") {
+                    ExtendedFloatingActionButton(
+                        text = { Text("New Tip") },
+                        icon = { Icon(painterResource(id = R.drawable.edit_24px), contentDescription = "New Tip") },
+                        onClick = onFabClick,
+                        containerColor = Color(0xFF5A8659),
+                        contentColor = Color.White
+                    )
+                }
+            }
+        },
+        content = { padding ->
+            Column(modifier = Modifier.padding(padding)) {
+                Text(
+                    text = "Recommend",
+                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier.padding(16.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(topTipList) { tip ->
+                        CarouselItem(tip = tip, onClick = onProductTipClick)
+                    }
+                }
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 20.dp),
+                    thickness = 1.dp,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Tips Feed",
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
+                SortChip(
+                    selectedSortDirection = sortDirection,
+                    onSortDirectionSelected = { direction ->
+                        viewModel.sortDirection.value = direction
+                        viewModel.queryAllTips(direction)
+                    }
+                )
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(tipList) { tip ->
+                        TipItem(tip = tip, onClick = onProductTipClick)
+                    }
+                }
+            }
+        }
+    )
 }
 
-class TipMainScreenFragment : Fragment(), onProductTipClickListener {
-
-    private val viewModel: TipsViewModel by viewModels()
-    private lateinit var adapter: TipAdapter
-    private lateinit var carouselAdapter: TipCarouselAdapter
-    private var _binding: FragmentTipMainScreenBinding? = null
-    private val binding get() = _binding!!
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentTipMainScreenBinding.inflate(inflater, container, false)
-        val rootView = binding.root
-        setupRecyclerView()
-        setupCarousel()
-        setupFabButton()
-        setupSortChip(savedInstanceState)
-        return rootView
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        viewModel.topTipList.observe(viewLifecycleOwner) { topTipList ->
-            carouselAdapter.submitList(topTipList)
-        }
-        viewModel.tipList.observe(viewLifecycleOwner) { tipList ->
-            adapter.submitList(tipList)
+@OptIn(ExperimentalGlideComposeApi::class)
+@Composable
+fun CarouselItem(tip: Tip, onClick: (Tip) -> Unit) {
+    Card(
+        modifier = Modifier
+            .size(200.dp)
+            .padding(8.dp),
+        onClick = { onClick(tip) }
+    ) {
+        Column {
+            GlideImage(
+                model = tip.imageList.firstOrNull(),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+            )
+            Text(
+                text = tip.title,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(8.dp)
+            )
         }
     }
+}
 
-    private fun setupRecyclerView() {
-        adapter = TipAdapter(this)
-        binding.tipRecyclerView.adapter = adapter
-        binding.tipRecyclerView.layoutManager =
-            LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
-    }
-
-    private fun setupCarousel() {
-        carouselAdapter = TipCarouselAdapter(this)
-        binding.carouselRecyclerView.layoutManager = CarouselLayoutManager(HeroCarouselStrategy())
-        binding.carouselRecyclerView.adapter = carouselAdapter
-        binding.carouselRecyclerView.setHasFixedSize(true)
-        val snapHelper = CarouselSnapHelper()
-        snapHelper.attachToRecyclerView(binding.carouselRecyclerView)
-    }
-
-    private fun setupFabButton() {
-        RoleManagement.checkUserRole(AuthHandler.firebaseAuth) {
-            if (it == "writer") {
-                binding.fabNavWriteTipAction.visibility = View.VISIBLE
-                binding.fabNavWriteTipAction.setOnClickListener {
-                    val intent = Intent(requireContext(), WriteTipActivity::class.java)
-                    startActivity(intent)
-                }
-            } else {
-                binding.fabNavWriteTipAction.visibility = View.GONE
+@OptIn(ExperimentalGlideComposeApi::class)
+@Composable
+fun TipItem(tip: Tip, onClick: (Tip) -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = { onClick(tip) }
+    ) {
+        Row(
+            modifier = Modifier.padding(8.dp)
+        ) {
+            GlideImage(
+                model = tip.imageList.firstOrNull(),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(MaterialTheme.shapes.medium)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column {
+                Text(
+                    text = tip.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(8.dp)
+                )
+                Text(
+                    text = "${tip.vote_count} votes",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(8.dp)
+                )
             }
         }
     }
+}
 
-    private fun setupSortChip(savedInstanceState: Bundle?) {
-        val sortChip = binding.tipsSortChip
-        val popupMenu = PopupMenu(requireContext(), sortChip)
-        popupMenu.menuInflater.inflate(R.menu.tip_sort_options, popupMenu.menu)
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+fun SortChip(
+    selectedSortDirection: Int,
+    onSortDirectionSelected: (Int) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
 
-        val defaultSortDirection = savedInstanceState?.getInt("sortDirectionId") ?: TipsViewModel.SORT_BY_NEWEST
-        val defaultSortText = when(defaultSortDirection){
-            R.id.sort_by_newest -> "Newest first"
-            R.id.sort_by_vote -> "Most voted"
-            R.id.sort_by_oldest -> "Oldest first"
-            else -> "Newest first"
-        }
-        val defaultSortDirectionIcon = when(defaultSortDirection){
-            R.id.sort_by_newest -> R.drawable.newest_24px
-            R.id.sort_by_vote -> R.drawable.volunteer_activism_24px
-            R.id.sort_by_oldest -> R.drawable.oldest_24px
-            else -> R.drawable.newest_24px
-        }
-        binding.tipsSortChip.chipIcon = resources.getDrawable(defaultSortDirectionIcon, context?.theme)
-        binding.tipsSortChip.text = defaultSortText
+    val options = listOf(
+        R.id.sort_by_newest to Pair("Newest first", R.drawable.newest_24px),
+        R.id.sort_by_vote to Pair("Most voted", R.drawable.volunteer_activism_24px),
+        R.id.sort_by_oldest to Pair("Oldest first", R.drawable.oldest_24px)
+    )
 
-        sortChip.setOnClickListener {
-            Log.d("TipMainScreenFragment", "Sort chip clicked")
-            popupMenu.show()
-        }
+    val selectedOption = options.firstOrNull { it.first == selectedSortDirection }
 
-        popupMenu.setOnMenuItemClickListener {
-            binding.tipsSortChip.text = popupMenu.menu.findItem(it.itemId).title
-            binding.tipsSortChip.chipIcon = popupMenu.menu.findItem(it.itemId).icon
-            when(it.itemId) {
-                R.id.sort_by_newest -> {
-                    viewModel.sortDirection.value = TipsViewModel.SORT_BY_NEWEST
-                    savedInstanceState?.putInt("sortDirectionId", TipsViewModel.SORT_BY_NEWEST)
-                }
-                R.id.sort_by_vote -> {
-                    viewModel.sortDirection.value = TipsViewModel.SORT_BY_VOTE
-                    savedInstanceState?.putInt("sortDirectionId", TipsViewModel.SORT_BY_VOTE)
-                }
-                R.id.sort_by_oldest -> {
-                    viewModel.sortDirection.value = TipsViewModel.SORT_BY_OLDEST
-                    savedInstanceState?.putInt("sortDirectionId", TipsViewModel.SORT_BY_OLDEST)
-                }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded }
+    ) {
+        FilterChip(
+            selected = false,
+            onClick = { expanded = true },
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(id = selectedOption?.second?.second ?: R.drawable.newest_24px),
+                    contentDescription = null
+                )
+            },
+            label = { Text(selectedOption?.second?.first ?: "Select") },
+            modifier = Modifier.padding(4.dp)
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { (id, labelIconPair) ->
+                val (label, iconRes) = labelIconPair
+                DropdownMenuItem(
+                    text = { Text(label) },
+                    onClick = {
+                        onSortDirectionSelected(id)
+                        expanded = false
+                    },
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(id = iconRes),
+                            contentDescription = null
+                        )
+                    }
+                )
             }
-            true
-        }
-
-        viewModel.sortDirection.observe(viewLifecycleOwner) { direction ->
-            Log.d("TipMainScreenFragment", "Sort direction changed: $direction")
-            viewModel.queryAllTips(direction)
         }
     }
+}
 
-    override fun onResume() {
-        super.onResume()
-        viewModel.queryAllTips(viewModel.sortDirection.value ?: TipsViewModel.SORT_BY_NEWEST)
+@Composable
+fun TipMainScreenFragmentContainer() {
+    val viewModel: TipsViewModel = viewModel()
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.queryAllTips(TipsViewModel.SORT_BY_NEWEST)
         viewModel.queryTopTips()
     }
 
-
-    override fun onProductTipClick(tip: Tip) {
-        val intent = Intent(requireContext(), TipDetailActivity::class.java)
-        intent.putExtra("tipData", tip)
-        startActivity(intent)
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
+    TipMainScreen(
+        viewModel = viewModel,
+        onProductTipClick = { tip ->
+            val intent = Intent(context, TipDetailActivity::class.java).apply {
+                putExtra("tipData", tip)
+            }
+            context.startActivity(intent)
+        },
+        onFabClick = {
+            val intent = Intent(context, WriteTipActivity::class.java)
+            context.startActivity(intent)
+        }
+    )
 }

@@ -9,19 +9,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.view.ViewCompat
 import androidx.fragment.app.FragmentActivity
-import androidx.fragment.app.commit
 import androidx.navigation.compose.*
 import com.example.compose.TreeTheme
 import com.example.tree.admin.activities.AdminMainActivity
 import com.example.tree.utils.AuthHandler
 import com.example.tree.utils.PermissionManager
 import com.example.tree.utils.RoleManagement
-import com.example.tree.tips.TipMainScreenFragment
+import com.example.tree.tips.TipMainScreenFragmentContainer
 import com.example.tree.ui.BottomNavigationBar
 import com.example.tree.ui.Screen
 import com.example.tree.users.activities.UserProfileScreenContainer
@@ -102,19 +98,7 @@ fun MainScreen() {
     }
 }
 
-@Composable
-fun TipMainScreenFragmentContainer() {
-    val context = LocalContext.current
-    val activity = context as FragmentActivity
-    AndroidView(factory = { ctx ->
-        androidx.fragment.app.FragmentContainerView(ctx).apply {
-            id = ViewCompat.generateViewId()
-            activity.supportFragmentManager.commit {
-                replace(id, TipMainScreenFragment())
-            }
-        }
-    })
-}
+
 
 @Preview(showBackground = true)
 @Composable

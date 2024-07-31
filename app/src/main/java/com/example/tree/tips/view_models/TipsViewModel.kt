@@ -9,7 +9,6 @@ import com.example.tree.tips.models.Vote
 import com.example.tree.users.models.Writer
 import com.example.tree.users.models.User
 import com.example.tree.utils.AuthHandler
-import com.example.tree.utils.SingleLiveEvent
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -20,16 +19,33 @@ class TipsViewModel : ViewModel() {
     private val firestore = FirebaseFirestore.getInstance()
     val tipList = MutableLiveData<List<Tip>>()
     val topTipList = MutableLiveData<List<Tip>>()
-    private var tipListDocuments : QuerySnapshot? = null
+    private var tipListDocuments: QuerySnapshot? = null
     private val collectionRef = firestore.collection("Tip")
     val sortDirection = MutableLiveData(SORT_BY_NEWEST)
+    val user = MutableLiveData<User?>()
 
-    // Directions
+    init {
+        loadUser()
+    }
+
     companion object {
-
         const val SORT_BY_NEWEST = 1
         const val SORT_BY_VOTE = 0
         const val SORT_BY_OLDEST = -1
+    }
+
+    private fun loadUser() {
+        val currentUser = AuthHandler.firebaseAuth.currentUser
+        currentUser?.let {
+            firestore.collection("users").document(it.uid)
+                .get()
+                .addOnSuccessListener { document ->
+                    user.value = document.toObject(User::class.java)
+                }
+                .addOnFailureListener {
+                    Log.e("TipsViewModel", "Error fetching user", it)
+                }
+        }
     }
 
     fun queryAllTips(direction: Int) {
@@ -40,7 +56,7 @@ class TipsViewModel : ViewModel() {
             tipList.value = documents.toObjects(Tip::class.java)
             Log.d("TipsViewModel", "Done getting tips")
         }
-        fun queryFailListener(err: Exception){
+        fun queryFailListener(err: Exception) {
             Log.d("TipsViewModel", "Error getting documents: ", err)
         }
         when (direction) {
@@ -50,7 +66,7 @@ class TipsViewModel : ViewModel() {
                 .addOnSuccessListener { documents ->
                     querySuccessListener(documents)
                 }
-                .addOnFailureListener{
+                .addOnFailureListener {
                     queryFailListener(it)
                 }
             SORT_BY_VOTE -> collectionApprovedRef
@@ -59,7 +75,7 @@ class TipsViewModel : ViewModel() {
                 .addOnSuccessListener { documents ->
                     querySuccessListener(documents)
                 }
-                .addOnFailureListener{
+                .addOnFailureListener {
                     queryFailListener(it)
                 }
             SORT_BY_OLDEST -> collectionApprovedRef
@@ -68,7 +84,7 @@ class TipsViewModel : ViewModel() {
                 .addOnSuccessListener { documents ->
                     querySuccessListener(documents)
                 }
-                .addOnFailureListener{
+                .addOnFailureListener {
                     queryFailListener(it)
                 }
         }
@@ -84,7 +100,7 @@ class TipsViewModel : ViewModel() {
                 topTipList.value = documents.toObjects(Tip::class.java)
                 Log.d("TipsViewModel", "Done getting top tips: " + topTipList.value?.size)
             }
-            .addOnFailureListener{
+            .addOnFailureListener {
                 Log.d("TipsViewModel", "Error getting documents: ", it)
             }
     }
