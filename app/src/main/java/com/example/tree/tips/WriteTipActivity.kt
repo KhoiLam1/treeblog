@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import coil.compose.rememberAsyncImagePainter
+import com.example.compose.TreeTheme
 import com.example.tree.tips.models.Tip
 import com.example.tree.utils.AuthHandler
 import com.google.firebase.firestore.FirebaseFirestore
@@ -51,13 +52,15 @@ class WriteTipActivity : ComponentActivity() {
                     Toast.makeText(this, "No media selected", Toast.LENGTH_SHORT).show()
                 }
             }
+            TreeTheme {
+                WriteTipScreen(
+                    imageUri = pickedImageUri,
+                    onPickImage = { pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                    onSaveTip = { tip -> uploadImageAndSaveTip(tip, pickedImageUri) },
+                    onCancel = { finish() }
+                )
+            }
 
-            WriteTipScreen(
-                imageUri = pickedImageUri,
-                onPickImage = { pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-                onSaveTip = { tip -> uploadImageAndSaveTip(tip, pickedImageUri) },
-                onCancel = { finish() }
-            )
         }
     }
 
@@ -81,13 +84,13 @@ class WriteTipActivity : ComponentActivity() {
     }
 
     private fun saveTipToFirestore(tip: Tip) {
-        fireStoreInstance.collection("Tip").add(tip)
+        fireStoreInstance.collection("tips").add(tip)
             .addOnSuccessListener { documentReference ->
                 val documentId = documentReference.id
                 lifecycleScope.launch {
                     addFirestoreDocument("checkContent", "Please check this content (Harassment, Hate speech, Sexually explicit content, Dangerous content, not Plant-related, meaningless content and not a tip for plant should be rejected): " + "${tip.title} - ${tip.shortDescription} - ${tip.content}", documentId)
                 }
-                fireStoreInstance.collection("Tip").document(documentId)
+                fireStoreInstance.collection("tips").document(documentId)
                     .update("id", documentId)
                 Toast.makeText(
                     this,
@@ -162,15 +165,10 @@ fun WriteTipScreen(
             label = { Text("Title") },
             modifier = Modifier.fillMaxWidth(),
             textStyle = LocalTextStyle.current.copy(fontSize = 24.sp),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Color(0xFF5A8659),
-                focusedLabelColor = Color(0xFF5A8659)
-            )
         )
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = onPickImage,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5A8659)),
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
             Text("Add a Thumbnail", color = Color.White)
@@ -185,10 +183,6 @@ fun WriteTipScreen(
                 .heightIn(min = 64.dp),
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
             maxLines = 2,
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Color(0xFF5A8659),
-                focusedLabelColor = Color(0xFF5A8659)
-            )
         )
         Spacer(modifier = Modifier.height(24.dp))
         OutlinedTextField(
@@ -200,10 +194,6 @@ fun WriteTipScreen(
                 .heightIn(min = 160.dp),
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
             maxLines = 10,
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Color(0xFF5A8659),
-                focusedLabelColor = Color(0xFF5A8659)
-            )
         )
         Spacer(modifier = Modifier.height(32.dp))
         Row(
@@ -216,7 +206,6 @@ fun WriteTipScreen(
             ) {
                 Text(
                     text = "Cancel",
-                    color = Color(0xFF5A8659)
                 )
             }
             Spacer(modifier = Modifier.width(16.dp))
@@ -231,7 +220,6 @@ fun WriteTipScreen(
                     )
                     onSaveTip(tip)
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5A8659)),
                 modifier = Modifier.weight(1f)
             ) {
                 Text("Save", color = Color.White)
@@ -243,10 +231,12 @@ fun WriteTipScreen(
 @Preview(showBackground = true)
 @Composable
 fun PreviewWriteTipScreen() {
-    WriteTipScreen(
-        imageUri = null,
-        onPickImage = {},
-        onSaveTip = {},
-        onCancel = {}
-    )
+    TreeTheme {
+        WriteTipScreen(
+            imageUri = null,
+            onPickImage = {},
+            onSaveTip = {},
+            onCancel = {}
+        )
+    }
 }

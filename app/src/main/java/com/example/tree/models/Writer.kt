@@ -11,13 +11,11 @@ data class Writer(
     var id: String,
     var writerName: String,
     var writerEmail: String,
-    var writerPhoneNumber: String,
     var writerAvatar: String = "",
     var createdAt: Date = Date(),
     var updatedAt: Date = Date(),
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
-        parcel.readString()!!,
         parcel.readString()!!,
         parcel.readString()!!,
         parcel.readString()!!,
@@ -31,7 +29,6 @@ data class Writer(
             parcel.writeString(id)
             parcel.writeString(writerName)
             parcel.writeString(writerEmail)
-            parcel.writeString(writerPhoneNumber)
             parcel.writeString(writerAvatar)
             parcel.writeLong(createdAt.time)
             parcel.writeLong(updatedAt.time)
@@ -42,7 +39,6 @@ data class Writer(
                 id = parcel.readString()!!,
                 writerName = parcel.readString()!!,
                 writerEmail = parcel.readString()!!,
-                writerPhoneNumber = parcel.readString()!!,
                 writerAvatar = parcel.readString()!!,
                 createdAt = Date(parcel.readLong()),
                 updatedAt = Date(parcel.readLong())

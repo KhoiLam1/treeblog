@@ -17,6 +17,7 @@ import com.example.tree.tips.adapters.TipAdapter
 import com.example.tree.tips.adapters.TipCarouselAdapter
 import com.example.tree.tips.models.Tip
 import com.example.tree.tips.view_models.TipsViewModel
+import com.example.tree.ui.Screen
 import com.example.tree.utils.AuthHandler
 import com.example.tree.utils.RoleManagement
 import com.google.android.material.carousel.CarouselLayoutManager
@@ -148,8 +149,9 @@ class TipMainScreenFragment : Fragment(), onProductTipClickListener {
 
 
     override fun onProductTipClick(tip: Tip) {
-        val destination = TipMainScreenFragmentDirections.actionMainTipFragmentToTipDetailFragment2(tip)
-        findNavController().navigate(destination)
+        val intent = Intent(requireContext(), TipDetailActivity::class.java)
+        intent.putExtra("tipData", tip)
+        startActivity(intent)
     }
 
     override fun onDestroyView() {

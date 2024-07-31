@@ -26,8 +26,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.example.compose.TreeTheme
 import com.example.tree.R
-import com.example.tree.ui.theme.TreeTheme
 import com.example.tree.users.factories.UserProfileViewModelFactory
 import com.example.tree.users.models.User
 import com.example.tree.users.repositories.UserRepository

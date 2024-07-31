@@ -88,7 +88,6 @@ class RegisterToWriterActivity : ComponentActivity() {
             id = "",
             writerName = pseudonym,
             writerEmail = email,
-            writerPhoneNumber = "",
             writerAvatar = avatarUrl
         )
 

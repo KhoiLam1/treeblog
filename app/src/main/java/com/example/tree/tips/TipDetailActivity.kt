@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -35,6 +36,7 @@ import com.example.tree.tips.models.Author
 import com.example.tree.tips.models.Tip
 import com.example.tree.tips.view_models.CommentViewModel
 import com.example.tree.tips.view_models.TipsViewModel
+import com.example.tree.ui.Screen
 import com.example.tree.users.activities.CustomGreen
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -90,7 +92,7 @@ fun TipDetailScreen(tip: Tip, author: Author, tipsViewModel: TipsViewModel, comm
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tip Details") },
+                title = { Text(stringResource(id = Screen.TipDetail.titleResId)) },
                 navigationIcon = {
                     IconButton(onClick = { /* Handle back navigation */ }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")

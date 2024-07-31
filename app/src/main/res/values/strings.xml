@@ -4,6 +4,9 @@
     <string name="tips_fragment">Tips Fragment</string>
     <string name="ads_fragment">Ads Fragment</string>
 
+    <string name="main_tip">Home</string>
+    <string name="user_profile">Profile</string>
+
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
@@ -168,6 +171,7 @@
     <string name="order_details">Order Details</string>
     <string name="product_reviews">Product Review</string>
     <string name="update_product">Update Product</string>
+    <string name="tip_detail">Tip Detail</string>
     <string-array name="tips_report_reasons">
         <item>Spam</item>
         <item>Offensive</item>

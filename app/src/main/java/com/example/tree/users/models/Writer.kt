@@ -10,12 +10,11 @@ data class Writer(
     val writerName: String = "",
     var writerAvatar: String = "",
     val writerEmail: String = "",
-    val writerPhoneNumber: String = "",
     var active: Boolean = true,
     val createdAt: Date = Date(),
     var updatedAt: Date = Date()
 ) : Parcelable {
     override fun toString(): String {
-        return "Writer(id=$id, storeName=$writerName)"
+        return "Writer(id=$id, writerName=$writerName)"
     }
 }
