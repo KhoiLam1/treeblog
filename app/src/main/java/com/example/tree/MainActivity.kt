@@ -4,27 +4,17 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-//noinspection UsingMaterialAndMaterial3Libraries
-//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.ViewCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.commit
-import androidx.navigation.NavController
 import androidx.navigation.compose.*
 import com.example.compose.TreeTheme
 import com.example.tree.admin.activities.AdminMainActivity
@@ -34,7 +24,7 @@ import com.example.tree.utils.RoleManagement
 import com.example.tree.tips.TipMainScreenFragment
 import com.example.tree.ui.BottomNavigationBar
 import com.example.tree.ui.Screen
-import com.example.tree.users.activities.UserProfileActivity
+import com.example.tree.users.activities.UserProfileScreenContainer
 import com.google.accompanist.insets.ProvideWindowInsets
 
 class MainActivity : FragmentActivity() {
@@ -106,8 +96,8 @@ fun MainScreen() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.MainTip.route) { TipMainScreenFragmentContainer() }
-            composable(Screen.TipDetail.route + "/{tipId}") { TipMainScreenFragmentContainer() }
-            composable(Screen.Profile.route) { UserProfileScreen() }
+//            composable(Screen.TipDetail.route + "/{tipId}") { TipMainScreenFragmentContainer() }
+            composable(Screen.Profile.route) { UserProfileScreenContainer() }
         }
     }
 }
@@ -126,13 +116,6 @@ fun TipMainScreenFragmentContainer() {
     })
 }
 
-@Composable
-fun UserProfileScreen() {
-    val context = LocalContext.current
-    val intent = Intent(context, UserProfileActivity::class.java)
-    context.startActivity(intent)
-}
-
 @Preview(showBackground = true)
 @Composable
 fun MainScreenPreview() {
@@ -141,4 +124,3 @@ fun MainScreenPreview() {
     }
 }
 
-data class NavigationItem(val route: String, val label: String, @DrawableRes val icon: Int)

@@ -1,10 +1,7 @@
 package com.example.tree.users.activities
 
+
 import android.content.Intent
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -24,9 +21,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
-import com.example.compose.TreeTheme
 import com.example.tree.R
 import com.example.tree.users.factories.UserProfileViewModelFactory
 import com.example.tree.users.models.User
@@ -38,42 +35,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
-
-class UserProfileActivity : ComponentActivity() {
-
-    private val userProfileViewModel: UserProfileViewModel by viewModels {
-        UserProfileViewModelFactory(UserRepository(FirebaseFirestore.getInstance()))
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // Load user profile
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-        userProfileViewModel.loadUserProfile(userId)
-
-        setContent {
-            TreeTheme {
-                UserProfileScreen(
-                    viewModel = userProfileViewModel,
-                    onLogout = { navigateLogout() },
-                    onBecomeWriter = { navigateToBecomeWriter() }
-                )
-            }
-        }
-    }
-
-    private fun navigateToBecomeWriter() {
-        val intent = Intent(this, RegisterToWriterActivity::class.java)
-        startActivity(intent)
-    }
-
-    private fun navigateLogout() {
-        FirebaseAuth.getInstance().signOut()
-        val intent = Intent(this, SignInActivity::class.java)
-        startActivity(intent)
-    }
-}
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
@@ -149,38 +110,40 @@ fun UserProfileScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // "Up to Writer" card above the user profile details
-                Card(
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 4.dp)
-                ) {
-                    Column(
+                // Only display "Up to Writer" card if the user is not a writer
+                if (it.role == "user") {
+                    Card(
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .padding(horizontal = 4.dp, vertical = 4.dp)
                     ) {
-                        IconButton(
-                            onClick = { if (canBecomeWriter) onBecomeWriter() },
-                            enabled = canBecomeWriter,
+                        Column(
                             modifier = Modifier
-                                .background(if (canBecomeWriter) Color(0xFF5A8659) else Color.Gray, CircleShape)
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_unfold),
-                                contentDescription = "Up to Writer",
-                                tint = Color.White
+                            IconButton(
+                                onClick = { if (canBecomeWriter) onBecomeWriter() },
+                                enabled = canBecomeWriter,
+                                modifier = Modifier
+                                    .background(if (canBecomeWriter) Color(0xFF5A8659) else Color.Gray, CircleShape)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_unfold),
+                                    contentDescription = "Up to Writer",
+                                    tint = Color.White
+                                )
+                            }
+                            Text(
+                                text = "Up to Writer",
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier.padding(top = 4.dp),
+                                color = if (canBecomeWriter) Color.Black else Color.Gray
                             )
                         }
-                        Text(
-                            text = "Up to Writer",
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.padding(top = 4.dp),
-                            color = if (canBecomeWriter) Color.Black else Color.Gray
-                        )
                     }
                 }
 
@@ -270,6 +233,31 @@ fun ProfileDetailRow(iconRes: Int, label: String, value: String) {
         )
     }
 }
+@Composable
+fun UserProfileScreenContainer() {
+    val context = LocalContext.current
+    val userProfileViewModel: UserProfileViewModel = viewModel(
+        factory = UserProfileViewModelFactory(UserRepository(FirebaseFirestore.getInstance()))
+    )
+
+    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
+    LaunchedEffect(userId) {
+        userProfileViewModel.loadUserProfile(userId)
+    }
+
+    UserProfileScreen(
+        viewModel = userProfileViewModel,
+        onLogout = {
+            FirebaseAuth.getInstance().signOut()
+            context.startActivity(Intent(context, SignInActivity::class.java))
+        },
+        onBecomeWriter = {
+            context.startActivity(Intent(context, RegisterToWriterActivity::class.java))
+        }
+    )
+}
+
 
 @Preview(showBackground = true)
 @Composable

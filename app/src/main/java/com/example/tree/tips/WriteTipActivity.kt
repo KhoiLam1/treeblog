@@ -35,7 +35,6 @@ import kotlinx.coroutines.tasks.await
 class WriteTipActivity : ComponentActivity() {
     private val fireStoreInstance = FirebaseFirestore.getInstance()
     private val storageInstance = FirebaseStorage.getInstance()
-    private var imageUri: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
