@@ -1,5 +1,6 @@
 package com.example.tree.tips
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -26,17 +27,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import com.example.tree.MainActivity
 import com.example.tree.R
 import com.example.tree.tips.models.Author
 import com.example.tree.tips.models.Tip
 import com.example.tree.tips.view_models.CommentViewModel
 import com.example.tree.tips.view_models.TipsViewModel
-import com.example.tree.ui.Screen
 import com.example.tree.users.activities.CustomGreen
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -51,25 +50,43 @@ class TipDetailActivity : ComponentActivity() {
 
         val tip = intent.getParcelableExtra<Tip>("tipData")!!
 
-        // Observe Author LiveData
         tipsViewModel.authorLiveData.observe(this) { author ->
             if (author != null) {
                 setContent {
-                    TipDetailScreen(tip = tip, author = author, tipsViewModel = tipsViewModel, commentViewModel = commentViewModel)
+                    TipDetailScreen(
+                        tip = tip,
+                        author = author,
+                        tipsViewModel = tipsViewModel,
+                        commentViewModel = commentViewModel,
+                        onBackClick = { navigateBack() }
+                    )
                 }
             } else {
                 // Handle error case, maybe show a message
             }
         }
 
-        // Fetch the author data
         tipsViewModel.getAuthor(tip.userId)
+    }
+
+    private fun navigateBack() {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        startActivity(intent)
+        finish()
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TipDetailScreen(tip: Tip, author: Author, tipsViewModel: TipsViewModel, commentViewModel: CommentViewModel) {
+fun TipDetailScreen(
+    tip: Tip,
+    author: Author,
+    tipsViewModel: TipsViewModel,
+    commentViewModel: CommentViewModel,
+    onBackClick: () -> Unit
+) {
     val comments by commentViewModel.commentList.observeAsState(emptyList())
     val isUpvoted by tipsViewModel.getIsUpvoted(tip.id).observeAsState()
 
@@ -92,9 +109,9 @@ fun TipDetailScreen(tip: Tip, author: Author, tipsViewModel: TipsViewModel, comm
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(id = Screen.TipDetail.titleResId)) },
+                title = { Text("Tip Details") },
                 navigationIcon = {
-                    IconButton(onClick = { /* Handle back navigation */ }) {
+                    IconButton(onClick = onBackClick) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -303,24 +320,25 @@ fun TipDetailScreen(tip: Tip, author: Author, tipsViewModel: TipsViewModel, comm
         }
     }
 }
-@Preview(showBackground = true)
-@Composable
-fun TipDetailScreenPreview() {
-    val sampleTip = Tip(
-        id = "1",
-        title = "Sample Tip",
-        content = "This is a sample tip content.",
-        imageList = listOf("https://via.placeholder.com/200").toMutableList(),
-        createdAt = null,
-        updatedAt = null,
-        userId = "1",
-        vote_count = 100
-    )
-    val sampleAuthor = Author(
-        userId = "1",
-        fullName = "John",
-        writerName = "John Nguyen",
-        avatar = "https://via.placeholder.com/40"
-    )
-    TipDetailScreen(tip = sampleTip, author = sampleAuthor, tipsViewModel = TipsViewModel(), commentViewModel = CommentViewModel())
-}
+
+//@Preview(showBackground = true)
+//@Composable
+//fun TipDetailScreenPreview() {
+//    val sampleTip = Tip(
+//        id = "1",
+//        title = "Sample Tip",
+//        content = "This is a sample tip content.",
+//        imageList = listOf("https://via.placeholder.com/200").toMutableList(),
+//        createdAt = null,
+//        updatedAt = null,
+//        userId = "1",
+//        vote_count = 100
+//    )
+//    val sampleAuthor = Author(
+//        userId = "1",
+//        fullName = "John",
+//        writerName = "John Nguyen",
+//        avatar = "https://via.placeholder.com/40"
+//    )
+//    TipDetailScreen(tip = sampleTip, author = sampleAuthor, tipsViewModel = TipsViewModel(), commentViewModel = CommentViewModel())
+//}
