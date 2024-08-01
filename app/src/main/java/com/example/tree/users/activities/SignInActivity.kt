@@ -35,7 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tree.MainActivity
-import com.example.tree.admin.activities.AdminMainActivity
+//import com.example.tree.admin.activities.AdminMainActivity
 import com.example.tree.utils.CustomToast
 import com.example.tree.utils.ToastType
 import com.google.firebase.auth.FirebaseAuth
@@ -91,20 +91,20 @@ class SignInActivity : ComponentActivity() {
                 if (document.exists()) {
                     navigateToMainActivity(document.getString("email")!!)
                 } else {
-                    checkAdminAccess(it)
+//                    checkAdminAccess(it)
                 }
             }
         }
     }
 
-    private fun checkAdminAccess(uid: String) {
-        val db = FirebaseFirestore.getInstance()
-        db.collection("admins").document(uid).get().addOnSuccessListener { document ->
-            if (document.exists()) {
-                navigateToAdminMainActivity(document.getString("email")!!)
-            }
-        }
-    }
+//    private fun checkAdminAccess(uid: String) {
+//        val db = FirebaseFirestore.getInstance()
+//        db.collection("admins").document(uid).get().addOnSuccessListener { document ->
+//            if (document.exists()) {
+//                navigateToAdminMainActivity(document.getString("email")!!)
+//            }
+//        }
+//    }
 
     private fun navigateToSignUp() {
         val intent = Intent(this, SignUpActivity::class.java)
@@ -123,12 +123,12 @@ class SignInActivity : ComponentActivity() {
         startActivity(intent)
     }
 
-    private fun navigateToAdminMainActivity(email: String) {
-        val intent = Intent(this, AdminMainActivity::class.java)
-        intent.putExtra("email", email)
-        intent.putExtra("name", "Admin using email")
-        startActivity(intent)
-    }
+//    private fun navigateToAdminMainActivity(email: String) {
+//        val intent = Intent(this, AdminMainActivity::class.java)
+//        intent.putExtra("email", email)
+//        intent.putExtra("name", "Admin using email")
+//        startActivity(intent)
+//    }
 
     fun signOut() {
         if (::firebaseAuth.isInitialized) {
