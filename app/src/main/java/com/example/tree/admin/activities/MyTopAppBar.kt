@@ -18,17 +18,15 @@ import com.example.tree.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyTopAppBar() {
+fun MyTopAppBar(title:String = "Tips", navigationIcon :  @Composable (() -> Unit)? = null, actions: List<@Composable () -> Unit>? = null) {
     TopAppBar(
         title = {
             Text(
-                "Tips",
-                color = Color.Black,
-                style = TextStyle(fontSize = 20.sp, fontFamily = FontFamily.SansSerif)
+                title,
             )
         },
         navigationIcon = {
-            IconButton(onClick = { /* TODO: Handle menu click */ }) {
+            navigationIcon?.invoke() ?: IconButton(onClick = { /* TODO: Handle menu click */ }) {
                 Icon(
                     painterResource(id = R.drawable.icon_menu),
                     contentDescription = "Menu",
@@ -36,8 +34,10 @@ fun MyTopAppBar() {
                 )
             }
         },
-        modifier = Modifier
-            .fillMaxWidth()
-            .layoutId("appBar")
+        actions = {
+            actions?.forEach { action ->
+                action()
+            }
+        }
     )
 }
