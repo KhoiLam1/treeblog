@@ -117,7 +117,7 @@ class TipsViewModel : ViewModel() {
                 val avatar = user?.avatar ?: ""
                 val writerId = user?.writerId
 
-                if (writerId != null) {
+                if (!writerId.isNullOrEmpty()) {
                     val writerRef = firestore.collection("writers").document(writerId)
                     writerRef.get()
                         .addOnSuccessListener { writerDocument ->

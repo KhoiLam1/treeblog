@@ -1,6 +1,8 @@
 package com.example.tree.tips
 
 import android.content.Intent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -13,8 +15,11 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -35,7 +40,7 @@ fun TipMainScreen(
 ) {
     val topTipList by viewModel.topTipList.observeAsState(emptyList())
     val tipList by viewModel.tipList.observeAsState(emptyList())
-    val sortDirection by viewModel.sortDirection.observeAsState(TipsViewModel.SORT_BY_NEWEST)
+    val sortDirection by viewModel.sortDirection.observeAsState(0)
     val user by viewModel.user.observeAsState()
 
     Scaffold(
@@ -68,7 +73,7 @@ fun TipMainScreen(
                         CarouselItem(tip = tip, onClick = onProductTipClick)
                     }
                 }
-                HorizontalDivider(
+                Divider(
                     modifier = Modifier.padding(vertical = 20.dp),
                     thickness = 1.dp,
                     color = MaterialTheme.colorScheme.primary
@@ -163,7 +168,6 @@ fun TipItem(tip: Tip, onClick: (Tip) -> Unit) {
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 fun SortChip(
     selectedSortDirection: Int,
     onSortDirectionSelected: (Int) -> Unit
@@ -171,31 +175,38 @@ fun SortChip(
     var expanded by remember { mutableStateOf(false) }
 
     val options = listOf(
-        R.id.sort_by_newest to Pair("Newest first", R.drawable.newest_24px),
-        R.id.sort_by_vote to Pair("Most voted", R.drawable.volunteer_activism_24px),
-        R.id.sort_by_oldest to Pair("Oldest first", R.drawable.oldest_24px)
+        1 to Pair("Newest", R.drawable.newest_24px),
+        0 to Pair("Most voted", R.drawable.volunteer_activism_24px),
+        -1 to Pair("Oldest", R.drawable.oldest_24px)
     )
 
     val selectedOption = options.firstOrNull { it.first == selectedSortDirection }
+    val selectedLabel = selectedOption?.second?.first ?: "Newest"
 
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
-    ) {
-        FilterChip(
-            selected = false,
-            onClick = { expanded = true },
-            leadingIcon = {
+    Box {
+        Card(
+            shape = MaterialTheme.shapes.medium,
+            modifier = Modifier
+                .clickable { expanded = true }
+                .padding(8.dp),
+            elevation = CardDefaults.cardElevation(4.dp), // Set elevation
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface) // Set background color
+        ) {
+            Row(
+                modifier = Modifier.padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Icon(
                     painter = painterResource(id = selectedOption?.second?.second ?: R.drawable.newest_24px),
-                    contentDescription = null
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp)
                 )
-            },
-            label = { Text(selectedOption?.second?.first ?: "Select") },
-            modifier = Modifier.padding(4.dp)
-        )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = selectedLabel, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
 
-        ExposedDropdownMenu(
+        DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
@@ -210,7 +221,8 @@ fun SortChip(
                     leadingIcon = {
                         Icon(
                             painter = painterResource(id = iconRes),
-                            contentDescription = null
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 )
@@ -225,7 +237,7 @@ fun TipMainScreenFragmentContainer() {
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        viewModel.queryAllTips(TipsViewModel.SORT_BY_NEWEST)
+        viewModel.queryAllTips(1)
         viewModel.queryTopTips()
     }
 
