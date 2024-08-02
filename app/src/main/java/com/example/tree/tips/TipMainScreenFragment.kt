@@ -236,8 +236,9 @@ fun TipMainScreenFragmentContainer() {
     val viewModel: TipsViewModel = viewModel()
     val context = LocalContext.current
 
+    // Refresh data when returning to TipMainScreen
     LaunchedEffect(Unit) {
-        viewModel.queryAllTips(1)
+        viewModel.queryAllTips(viewModel.sortDirection.value ?: 1)
         viewModel.queryTopTips()
     }
 

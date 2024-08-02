@@ -50,14 +50,26 @@ class RegisterToWriterActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            var avatarUrl by remember { mutableStateOf<String?>(null) }
+
             RegisterToWriterScreen(
-                onImageSelected = { uri -> uploadImageToFirebase(uri) },
-                onRegisterClicked = { avatarUrl, pseudonym, email -> createNewWriter(avatarUrl, pseudonym, email) }
+                onImageSelected = { uri ->
+                    uploadImageToFirebase(uri) { url ->
+                        avatarUrl = url
+                    }
+                },
+                onRegisterClicked = { pseudonym, email ->
+                    avatarUrl?.let { url ->
+                        createNewWriter(url, pseudonym, email)
+                    } ?: run {
+                        CustomToast.show(this, "Image not uploaded yet", ToastType.FAILURE)
+                    }
+                }
             )
         }
     }
 
-    private fun uploadImageToFirebase(fileUri: Uri) {
+    private fun uploadImageToFirebase(fileUri: Uri, onUploadSuccess: (String) -> Unit) {
         ProgressDialogUtils.showLoadingDialog(this)
 
         val fileName = UUID.randomUUID().toString() + ".jpg"
@@ -72,13 +84,13 @@ class RegisterToWriterActivity : ComponentActivity() {
             }
             fileRef.downloadUrl
         }.addOnCompleteListener { task ->
+            ProgressDialogUtils.hideLoadingDialog()
             if (task.isSuccessful) {
                 val downloadUri = task.result.toString()
-                ProgressDialogUtils.hideLoadingDialog()
-                // Handle the avatar URL in your composable
+                CustomToast.show(this, "Image uploaded successfully", ToastType.SUCCESS)
+                onUploadSuccess(downloadUri)
             } else {
                 CustomToast.show(this, "Failed to upload image", ToastType.FAILURE)
-                ProgressDialogUtils.hideLoadingDialog()
             }
         }
     }
@@ -120,7 +132,7 @@ class RegisterToWriterActivity : ComponentActivity() {
 @Composable
 fun RegisterToWriterScreen(
     onImageSelected: (Uri) -> Unit,
-    onRegisterClicked: (String, String, String) -> Unit
+    onRegisterClicked: (String, String) -> Unit
 ) {
     var pseudonym by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -177,7 +189,7 @@ fun RegisterToWriterScreen(
                 onClick = { getImage.launch("image/*") },
                 colors = ButtonDefaults.buttonColors(containerColor = CustomGreen)
             ) {
-                    Text("Add Author Avatar")
+                Text("Add Author Avatar")
             }
         }
 
@@ -185,18 +197,22 @@ fun RegisterToWriterScreen(
             value = pseudonym,
             onValueChange = { pseudonym = it },
             label = { Text("Pseudonym") },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Color(0xFF5A8659),
-                    focusedLabelColor = Color(0xFF5A8659)
-        )
+                focusedBorderColor = Color(0xFF5A8659),
+                focusedLabelColor = Color(0xFF5A8659)
+            )
         )
 
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("Author Email") },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 focusedBorderColor = Color(0xFF5A8659),
                 focusedLabelColor = Color(0xFF5A8659)
@@ -206,13 +222,15 @@ fun RegisterToWriterScreen(
         Button(
             onClick = {
                 if (pseudonym.isNotEmpty() && email.isNotEmpty() && ValidationUtils.isValidEmail(email)) {
-                    onRegisterClicked(avatarUri.toString(), pseudonym, email)
+                    onRegisterClicked(pseudonym, email)
                 } else {
                     CustomToast.show(context, "Please fill all fields correctly", ToastType.FAILURE)
                 }
             },
             colors = ButtonDefaults.buttonColors(containerColor = CustomGreen),
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
             Text("Register")
         }
@@ -224,6 +242,6 @@ fun RegisterToWriterScreen(
 fun RegisterToWriterScreenPreview() {
     RegisterToWriterScreen(
         onImageSelected = {},
-        onRegisterClicked = { _, _, _ -> }
+        onRegisterClicked = { _, _ -> }
     )
 }

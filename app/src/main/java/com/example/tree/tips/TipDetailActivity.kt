@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
@@ -24,12 +25,14 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.example.tree.MainActivity
 import com.example.tree.R
 import com.example.tree.tips.models.Author
@@ -76,6 +79,7 @@ class TipDetailActivity : ComponentActivity() {
         startActivity(intent)
         finish()
     }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -105,6 +109,11 @@ fun TipDetailScreen(
 
     var upvoted by remember { mutableStateOf(isUpvoted == true) }
     var downvoted by remember { mutableStateOf(isUpvoted == false) }
+
+    LaunchedEffect(isUpvoted) {
+        upvoted = isUpvoted == true
+        downvoted = isUpvoted == false
+    }
 
     Scaffold(
         topBar = {
@@ -176,13 +185,12 @@ fun TipDetailScreen(
                 ) {
                     OutlinedButton(
                         onClick = {
-                            if (!upvoted) {
-                                upvoted = true
-                                downvoted = false
-                                tipsViewModel.castVote(tip, true)
-                            } else {
+                            if (upvoted) {
                                 upvoted = false
                                 tipsViewModel.unVoteTip(tip, true)
+                            } else if (!downvoted) {
+                                upvoted = true
+                                tipsViewModel.castVote(tip, true)
                             }
                             Log.d("TipDetailScreen", "Upvote button clicked: $upvoted")
                         },
@@ -212,13 +220,12 @@ fun TipDetailScreen(
                     }
                     OutlinedButton(
                         onClick = {
-                            if (!downvoted) {
-                                downvoted = true
-                                upvoted = false
-                                tipsViewModel.castVote(tip, false)
-                            } else {
+                            if (downvoted) {
                                 downvoted = false
                                 tipsViewModel.unVoteTip(tip, false)
+                            } else if (!upvoted) {
+                                downvoted = true
+                                tipsViewModel.castVote(tip, false)
                             }
                             Log.d("TipDetailScreen", "Downvote button clicked: $downvoted")
                         },
@@ -252,12 +259,21 @@ fun TipDetailScreen(
 
                 // Author Info
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    Log.d("TipDetailScreen", "Author Avatar URL: ${author.writerAvatar}")
                     Image(
-                        painter = rememberAsyncImagePainter(author.avatar),
+                        painter = rememberAsyncImagePainter(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(author.writerAvatar)
+                                .crossfade(true)
+                                .build(),
+                            placeholder = painterResource(R.drawable.img_placeholder), // Use a placeholder image
+                            error = painterResource(R.drawable.avatar_default_2) // Use an error image
+                        ),
                         contentDescription = "Author Avatar",
                         modifier = Modifier
                             .size(40.dp)
                             .padding(end = 8.dp)
+                            .clip(CircleShape) // Make the image circular
                     )
                     Column {
                         Text(text = author.fullName, style = MaterialTheme.typography.bodyLarge)

@@ -29,7 +29,7 @@ data class Author(
     val userId: String = "",
     val fullName: String = "",
     val writerName: String = "",
-    val avatar: String = ""
+    val writerAvatar: String = ""
 ) : Parcelable {
     override fun toString(): String {
         return "Author(userId='$userId', fullName='$fullName', writerName='$writerName')"

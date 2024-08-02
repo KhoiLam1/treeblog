@@ -9,10 +9,12 @@ import com.example.tree.tips.models.Vote
 import com.example.tree.users.models.Writer
 import com.example.tree.users.models.User
 import com.example.tree.utils.AuthHandler
+import com.google.firebase.Firebase
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
+import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.toObject
 
 class TipsViewModel : ViewModel() {
@@ -106,30 +108,33 @@ class TipsViewModel : ViewModel() {
     }
 
     val authorLiveData = MutableLiveData<Author?>()
-
     fun getAuthor(userId: String) {
-        val userRef = firestore.collection("users").document(userId)
+        val userRef = Firebase.firestore.collection("users").document(userId)
 
         userRef.get()
             .addOnSuccessListener { document ->
                 val user = document.toObject<User>()
                 val fullname = user?.fullName ?: ""
-                val avatar = user?.avatar ?: ""
                 val writerId = user?.writerId
 
                 if (!writerId.isNullOrEmpty()) {
-                    val writerRef = firestore.collection("writers").document(writerId)
+                    val writerRef = Firebase.firestore.collection("writers").document(writerId)
                     writerRef.get()
                         .addOnSuccessListener { writerDocument ->
-                            val writerName = writerDocument.toObject<Writer>()?.writerName ?: ""
-                            authorLiveData.value = Author(userId, fullname, writerName, avatar)
+                            val writer = writerDocument.toObject<Writer>()
+                            val writerName = writer?.writerName ?: ""
+                            val writerAvatar = writer?.writerAvatar ?: ""
+                            // Update authorLiveData with full user and writer details
+                            authorLiveData.value = Author(userId, fullname, writerName, writerAvatar)
                         }
                         .addOnFailureListener { e ->
                             Log.w("TipsViewModel", "Error getting writer data", e)
-                            authorLiveData.value = null
+                            // Set authorLiveData with only user details if writer data fails
+                            authorLiveData.value = Author(userId, fullname, "", "")
                         }
                 } else {
-                    authorLiveData.value = Author(userId, fullname, "", avatar)
+                    // Set authorLiveData with only user details if no writerId
+                    authorLiveData.value = Author(userId, fullname, "", "")
                 }
             }
             .addOnFailureListener { e ->

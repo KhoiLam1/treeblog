@@ -18,7 +18,8 @@
         android:name="android.hardware.telephony"
         android:required="false" />
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 
     <application
@@ -47,7 +48,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".admin.activities.AdminMainActivity" />
+<!--        <activity android:name=".admin.activities.AdminMainActivity" />-->
         <activity android:name=".tips.TipDetailActivity" />
         <activity android:name=".tips.WriteTipActivity" />
         <activity
@@ -58,9 +59,9 @@
             android:exported="false" />
 
         <!-- Add the missing UserProfileActivity declaration -->
-        <activity
-            android:name=".users.activities.UserProfileActivity"
-            android:exported="true" />
+<!--        <activity-->
+<!--            android:name=".users.activities.UserProfileActivity"-->
+<!--            android:exported="true" />-->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3940256099942544~3347511713" />
