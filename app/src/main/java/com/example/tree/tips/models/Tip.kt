@@ -16,6 +16,7 @@ data class Tip(
     var shortDescription: String = "",
     var title: String = "",
     var userId: String = "",
+    var checkContent: String = "",
     var vote_count: Int = 0,
     var id: String = "",
 ) : Parcelable {

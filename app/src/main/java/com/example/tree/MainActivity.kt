@@ -3,6 +3,7 @@ package com.example.tree
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
@@ -13,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.compose.*
 import com.example.compose.TreeTheme
+import com.example.tree.admin.activities.AdminMainActivity
 //import com.example.tree.admin.activities.AdminMainActivity
 import com.example.tree.utils.AuthHandler
 import com.example.tree.utils.PermissionManager
@@ -57,13 +59,25 @@ class MainActivity : FragmentActivity() {
     }
 
     private fun setupUserRole() {
-        setContent {
-            TreeTheme {
-                ProvideWindowInsets {
-                    MainScreen()
+        RoleManagement.checkUserRole(firebaseAuth = AuthHandler.firebaseAuth, onSuccess = {
+            when (it) {
+                "admin" -> {
+                    val intent = Intent(this, AdminMainActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                }
+                else -> {
+                    Toast.makeText(this, "Welcome " + AuthHandler.firebaseAuth.currentUser?.displayName, Toast.LENGTH_SHORT).show()
+                    setContent {
+                        TreeTheme {
+                            ProvideWindowInsets {
+                                MainScreen()
+                            }
+                        }
+                    }
                 }
             }
-        }
+        })
     }
 
 @Composable

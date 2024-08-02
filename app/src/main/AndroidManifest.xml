@@ -57,6 +57,8 @@
         <activity
             android:name=".users.activities.SignUpActivity"
             android:exported="false" />
+        <activity android:name=".admin.activities.AdminMainActivity"
+            android:exported="false"/>
 
         <!-- Add the missing UserProfileActivity declaration -->
 <!--        <activity-->

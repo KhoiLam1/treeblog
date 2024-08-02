@@ -13,6 +13,7 @@ data class Tip (
     var title: String,
     var shortDescription: String,
     var content: String,
+    var checkContent: String,
     var imageList: List<String>,
     var vote_count: Int,
     var approvalStatus: Int,
@@ -25,6 +26,7 @@ data class Tip (
         parcel.readString()!!,
         parcel.readString()!!,
         parcel.readString()!!,
+        parcel.readString()!!,
         parcel.createStringArrayList()!!,
         parcel.readInt(),
         parcel.readInt(),
@@ -32,7 +34,7 @@ data class Tip (
         Date(parcel.readLong())
     )
 
-    constructor() : this("", "", "", "", "", emptyList(), 0, 0, Date(), Date())
+    constructor() : this("", "", "", "", "","", emptyList(), 0, 0, Date(), Date())
 
     companion object : Parceler<Tip> {
 
@@ -40,6 +42,7 @@ data class Tip (
             parcel.writeString(id)
             parcel.writeString(userId)
             parcel.writeString(title)
+            parcel.writeString(checkContent)
             parcel.writeString(shortDescription)
             parcel.writeString(content)
             parcel.writeStringList(imageList)

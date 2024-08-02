@@ -43,6 +43,8 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.firestore.FirebaseFirestore
 import com.example.tree.R
+import com.example.tree.admin.activities.AdminMainActivity
+
 val CustomGreen = Color(0xFF5A8659)
 
 class SignInActivity : ComponentActivity() {
@@ -88,23 +90,23 @@ class SignInActivity : ComponentActivity() {
         uid?.let {
             val db = FirebaseFirestore.getInstance()
             db.collection("users").document(it).get().addOnSuccessListener { document ->
-                if (document.exists()) {
-                    navigateToMainActivity(document.getString("email")!!)
-                } else {
-//                    checkAdminAccess(it)
-                }
+                navigateToMainActivity()
             }
+                .addOnFailureListener {
+                    checkAdminAccess(uid)
+                }
         }
     }
 
-//    private fun checkAdminAccess(uid: String) {
-//        val db = FirebaseFirestore.getInstance()
-//        db.collection("admins").document(uid).get().addOnSuccessListener { document ->
-//            if (document.exists()) {
-//                navigateToAdminMainActivity(document.getString("email")!!)
-//            }
-//        }
-//    }
+    private fun checkAdminAccess(uid: String) {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("admins").document(uid).get().addOnSuccessListener { document ->
+
+                navigateToAdminMainActivity()
+        }.addOnFailureListener{
+            CustomToast.show(this, "Sign in failed: ${it.message}", ToastType.FAILURE)
+        }
+    }
 
     private fun navigateToSignUp() {
         val intent = Intent(this, SignUpActivity::class.java)
@@ -116,19 +118,15 @@ class SignInActivity : ComponentActivity() {
         startActivity(intent)
     }
 
-    private fun navigateToMainActivity(email: String) {
+    private fun navigateToMainActivity() {
         val intent = Intent(this, MainActivity::class.java)
-        intent.putExtra("email", email)
-        intent.putExtra("name", "User using email")
         startActivity(intent)
     }
 
-//    private fun navigateToAdminMainActivity(email: String) {
-//        val intent = Intent(this, AdminMainActivity::class.java)
-//        intent.putExtra("email", email)
-//        intent.putExtra("name", "Admin using email")
-//        startActivity(intent)
-//    }
+    private fun navigateToAdminMainActivity() {
+        val intent = Intent(this, AdminMainActivity::class.java)
+        startActivity(intent)
+    }
 
     fun signOut() {
         if (::firebaseAuth.isInitialized) {
