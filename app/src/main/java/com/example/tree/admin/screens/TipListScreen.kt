@@ -1,4 +1,4 @@
-package com.example.tree.admin.fragments
+package com.example.tree.admin.screens
 
 import android.content.Context
 import android.content.Intent

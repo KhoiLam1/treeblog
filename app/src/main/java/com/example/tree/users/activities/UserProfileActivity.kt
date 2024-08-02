@@ -192,7 +192,6 @@ fun UserProfileDetails(user: User) {
         Column(modifier = Modifier.padding(16.dp)) {
             ProfileDetailRow(iconRes = R.drawable.ic_username, label = "User Name", value = user.username)
             ProfileDetailRow(iconRes = R.drawable.ic_email, label = "Email", value = user.email)
-            ProfileDetailRow(iconRes = R.drawable.ic_phone, label = "Phone", value = user.phoneNumber)
             ProfileDetailRow(iconRes = R.drawable.ic_update, label = "Created Date", value = user.createdAt.toString())
         }
     }

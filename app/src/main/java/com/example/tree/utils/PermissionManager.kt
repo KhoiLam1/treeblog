@@ -11,9 +11,9 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.FragmentActivity
+import com.example.tree.MainActivity
 
-class PermissionManager(private val activity: FragmentActivity) {
+class PermissionManager(private val activity: MainActivity) {
     private val requiredPermissions = arrayOf(
         Manifest.permission.READ_MEDIA_IMAGES,
         Manifest.permission.READ_MEDIA_VIDEO,

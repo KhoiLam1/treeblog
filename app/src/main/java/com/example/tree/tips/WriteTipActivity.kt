@@ -83,13 +83,13 @@ class WriteTipActivity : ComponentActivity() {
     }
 
     private fun saveTipToFirestore(tip: Tip) {
-        fireStoreInstance.collection("tips").add(tip)
+        fireStoreInstance.collection("Tip").add(tip)
             .addOnSuccessListener { documentReference ->
                 val documentId = documentReference.id
                 lifecycleScope.launch {
                     addFirestoreDocument("checkContent", "Please check this content (Harassment, Hate speech, Sexually explicit content, Dangerous content, not Plant-related, meaningless content and not a tip for plant should be rejected): " + "${tip.title} - ${tip.shortDescription} - ${tip.content}", documentId)
                 }
-                fireStoreInstance.collection("tips").document(documentId)
+                fireStoreInstance.collection("Tip").document(documentId)
                     .update("id", documentId)
                 Toast.makeText(
                     this,

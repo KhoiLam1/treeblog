@@ -1,5 +1,8 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.tree.utils
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import android.widget.ImageView
@@ -9,6 +12,7 @@ import androidx.cardview.widget.CardView
 import com.example.tree.R
 
 object CustomToast {
+    @SuppressLint("InflateParams")
     fun show(context: Context, message: String, type: ToastType) {
         val inflater = LayoutInflater.from(context)
         val layout = inflater.inflate(R.layout.custom_toast_layout, null)

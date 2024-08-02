@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
@@ -11,11 +12,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.fragment.app.FragmentActivity
 import androidx.navigation.compose.*
 import com.example.compose.TreeTheme
 import com.example.tree.admin.activities.AdminMainActivity
-//import com.example.tree.admin.activities.AdminMainActivity
 import com.example.tree.utils.AuthHandler
 import com.example.tree.utils.PermissionManager
 import com.example.tree.utils.RoleManagement
@@ -25,7 +24,7 @@ import com.example.tree.ui.Screen
 import com.example.tree.users.activities.UserProfileScreenContainer
 import com.google.accompanist.insets.ProvideWindowInsets
 
-class MainActivity : FragmentActivity() {
+class MainActivity : ComponentActivity() {
 
     private lateinit var permissionManager: PermissionManager
 

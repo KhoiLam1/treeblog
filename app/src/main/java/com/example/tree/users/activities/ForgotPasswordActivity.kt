@@ -1,5 +1,6 @@
 package com.example.tree.users.activities
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -31,7 +32,9 @@ class ForgotPasswordActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ForgotPasswordScreen(
-                onResetPasswordRequested = { email -> sendPasswordResetEmail(email) }
+                onResetPasswordRequested = { email -> sendPasswordResetEmail(email) },
+                onBackToSignInRequested = { navigateBackToSignIn() },
+                onNavigateToSignUp = { navigateToSignUp() }
             )
         }
         // Initialize the AuthHandler
@@ -42,18 +45,34 @@ class ForgotPasswordActivity : ComponentActivity() {
         auth.sendPasswordResetEmail(email)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    // Handle success
+                    navigateBackToSignIn()
                 } else {
                     val message = task.exception?.message ?: "Failed to send reset email"
                     // Handle error
                 }
             }
     }
+
+    private fun navigateBackToSignIn() {
+        val intent = Intent(this, SignInActivity::class.java)
+        startActivity(intent)
+        finish()
+    }
+
+    private fun navigateToSignUp() {
+        val intent = Intent(this, SignUpActivity::class.java)
+        startActivity(intent)
+        finish()
+    }
+
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForgotPasswordScreen(
-    onResetPasswordRequested: (String) -> Unit
+    onResetPasswordRequested: (String) -> Unit,
+    onBackToSignInRequested: () -> Unit,
+    onNavigateToSignUp: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var emailValid by remember { mutableStateOf(true) }
@@ -115,6 +134,7 @@ fun ForgotPasswordScreen(
                 emailValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
                 if (emailValid) {
                     onResetPasswordRequested(email)
+                    onBackToSignInRequested()
                 }
             },
             colors = ButtonDefaults.buttonColors(containerColor = CustomGreen),
@@ -140,9 +160,19 @@ fun ForgotPasswordScreen(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
-                    .clickable { /* Navigate to Sign Up */ }
+                    .clickable { onNavigateToSignUp() }
                     .padding(start = 4.dp)
             )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = onBackToSignInRequested,
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+        ) {
+            Text(text = "BACK TO SIGN IN", color = Color.White)
         }
     }
 }
@@ -151,6 +181,8 @@ fun ForgotPasswordScreen(
 @Composable
 fun ForgotPasswordScreenPreview() {
     ForgotPasswordScreen(
-        onResetPasswordRequested = {}
+        onResetPasswordRequested = {},
+        onBackToSignInRequested = {},
+        onNavigateToSignUp = {}
     )
 }
