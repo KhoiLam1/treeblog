@@ -66,7 +66,7 @@ class MainActivity : ComponentActivity() {
                     finish()
                 }
                 else -> {
-                    Toast.makeText(this, "Welcome " + AuthHandler.firebaseAuth.currentUser?.displayName, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Welcome", Toast.LENGTH_SHORT).show()
                     setContent {
                         TreeTheme {
                             ProvideWindowInsets {

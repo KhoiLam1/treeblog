@@ -9,13 +9,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,7 +33,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tree.MainActivity
-//import com.example.tree.admin.activities.AdminMainActivity
 import com.example.tree.utils.CustomToast
 import com.example.tree.utils.ToastType
 import com.google.firebase.auth.FirebaseAuth
@@ -74,8 +71,7 @@ class SignInActivity : ComponentActivity() {
                     checkUserAccessLevel(firebaseAuth.currentUser?.uid)
                 } else {
                     val errorMessage = when {
-                        task.exception is FirebaseAuthInvalidCredentialsException -> "The password is incorrect."
-                        task.exception is FirebaseAuthInvalidUserException -> "The email address is not registered."
+                        task.exception is FirebaseAuthInvalidCredentialsException -> "The email address or password are incorrect."
                         else -> "Sign in failed: ${task.exception?.message}"
                     }
                     CustomToast.show(this, errorMessage, ToastType.FAILURE)
@@ -101,7 +97,6 @@ class SignInActivity : ComponentActivity() {
     private fun checkAdminAccess(uid: String) {
         val db = FirebaseFirestore.getInstance()
         db.collection("admins").document(uid).get().addOnSuccessListener { document ->
-
                 navigateToAdminMainActivity()
         }.addOnFailureListener{
             CustomToast.show(this, "Sign in failed: ${it.message}", ToastType.FAILURE)
@@ -229,7 +224,7 @@ fun SignInScreen(
             Text(text = "Didn't have an account? ", color = Color.Black, fontWeight = FontWeight.Bold)
             Text(
                 text = "Sign Up",
-                color = Color.Blue,
+                color = CustomGreen,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.clickable { onSignUpClick() }
             )

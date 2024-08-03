@@ -2,6 +2,7 @@ package com.example.tree.users.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -48,7 +49,7 @@ class ForgotPasswordActivity : ComponentActivity() {
                     navigateBackToSignIn()
                 } else {
                     val message = task.exception?.message ?: "Failed to send reset email"
-                    // Handle error
+                    Toast.makeText(this, message, Toast.LENGTH_LONG).show()
                 }
             }
     }

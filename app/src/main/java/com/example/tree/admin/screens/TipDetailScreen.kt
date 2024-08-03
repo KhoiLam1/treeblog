@@ -47,17 +47,20 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.tree.R
 import com.example.tree.admin.activities.MyTopAppBar
+import com.example.tree.models.CheckContent
 import com.example.tree.models.Tip
 import com.example.tree.models.User
 import com.example.tree.utils.CustomToast
 import com.example.tree.utils.ToastType
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.tasks.await
 import java.util.Date
 
 @Composable
 fun TipDetailScreen(tipId: String, navController: NavController) {
     val tip = loadTip(tipId).value
+    val checkContent = loadCheckContent(tipId).value
     val state = when(tip?.approvalStatus){
         -1 -> "Rejected"
         0 -> "Pending"
@@ -88,8 +91,12 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
             }
         }, title = "Tip: " + tip?.title
         )
+        val tag = "ImageDebug"
         AsyncImage(
-            model = if (tip?.imageList != null && tip.imageList.isNotEmpty()) tip.imageList[0] else null,
+            model = tip?.imageList?.firstOrNull()?.also { imageUrl ->
+                // Log the URL or path of the image
+                Log.d(tag, "Loading image: $imageUrl")
+            },
             placeholder = painterResource(id = R.drawable.sample_tip_pic),
             contentDescription = stringResource(id = R.string.first_image_of_tip),
             modifier = Modifier
@@ -125,7 +132,7 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
                 )
                 Column {
                     Text(
-                        text = if (tip?.checkContent != null && tip.checkContent.isNotEmpty()) tip.checkContent else "No response from AI",
+                        text = checkContent?.response ?: "No response from AI",
                         fontSize = 14.sp,
                         color = colorResource(id = R.color.md_theme_tertiaryFixedDim_mediumContrast)
                     )
@@ -135,75 +142,75 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-        ) {
-            Text(
-                text = tip?.title ?: "Title",
-                color = colorResource(id = R.color.md_theme_scrim),
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 7.dp)
-            )
-
-            Text(
-                text = tip?.shortDescription ?: "",
-                color = colorResource(id = R.color.md_theme_onSecondaryContainer),
-                fontSize = 14.sp,
-                modifier = Modifier.padding(top = 12.dp),
-            )
-
-            HorizontalDivider(
-                modifier = Modifier
-                    .padding(vertical = 20.dp)
-                    .fillMaxWidth()
-            )
-
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 20.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Image(
-                        painter = painterResource(id = R.drawable.icon_dot),
-                        contentDescription = stringResource(id = R.string.this_is_icon_for_illustration),
-                        modifier = Modifier
-                            .size(7.dp)
-                            .padding(end = 5.dp)
-                    )
-                    Text(
-                        text = state,
-                        color = colorResource(id = R.color.md_theme_pending),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    text = tip?.title ?: "Title",
+                    color = colorResource(id = R.color.md_theme_scrim),
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 7.dp)
+                )
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = DateFormat.format("dd MMM yyyy", tip?.createdAt ?: Date()).toString(),
-                        color = colorResource(id = R.color.md_theme_gray_addition),
-                        fontSize = 12.sp
-                    )
-                    Image(
-                        painter = painterResource(id = R.drawable.icon_dot),
-                        contentDescription = stringResource(id = R.string.this_is_icon_for_illustration),
-                        modifier = Modifier
-                            .padding(horizontal = 5.dp)
-                            .size(4.dp)
-                    )
-                    Text(
-                        text = vote_counts.toString() + " upvotes",
-                        color = colorResource(id = R.color.md_theme_gray_addition),
-                        fontSize = 12.sp
-                    )
+                Text(
+                    text = tip?.shortDescription ?: "",
+                    color = colorResource(id = R.color.md_theme_onSecondaryContainer),
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(top = 12.dp),
+                )
+
+                HorizontalDivider(
+                    modifier = Modifier
+                        .padding(vertical = 20.dp)
+                        .fillMaxWidth()
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = R.drawable.icon_dot),
+                            contentDescription = stringResource(id = R.string.this_is_icon_for_illustration),
+                            modifier = Modifier
+                                .size(7.dp)
+                                .padding(end = 5.dp)
+                        )
+                        Text(
+                            text = state,
+                            color = colorResource(id = R.color.md_theme_pending),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = DateFormat.format("dd MMM yyyy", tip?.createdAt ?: Date()).toString(),
+                            color = colorResource(id = R.color.md_theme_gray_addition),
+                            fontSize = 12.sp
+                        )
+                        Image(
+                            painter = painterResource(id = R.drawable.icon_dot),
+                            contentDescription = stringResource(id = R.string.this_is_icon_for_illustration),
+                            modifier = Modifier
+                                .padding(horizontal = 5.dp)
+                                .size(4.dp)
+                        )
+                        Text(
+                            text = vote_counts.toString() + " upvotes",
+                            color = colorResource(id = R.color.md_theme_gray_addition),
+                            fontSize = 12.sp
+                        )
+                    }
                 }
-            }
 
             Row(
                 modifier = Modifier
@@ -212,7 +219,7 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AsyncImage(
-                    model = user?.avatar ?: "",
+                    model = user.avatar ?: "",
                     placeholder = painterResource(id = R.drawable.avatar_default_2),
                     contentDescription = null,
                     modifier = Modifier
@@ -223,7 +230,7 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
                     modifier = Modifier.padding(start = 10.dp)
                 ) {
                     Text(
-                        text = user?.fullName ?: "",
+                        text = user.fullName ?: "",
                         color = colorResource(id = R.color.md_theme_secondary),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
@@ -298,19 +305,32 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
 }
 
 @Composable
-fun loadTip(tipId: String): State<Tip?> {
-    return produceState(initialValue = Tip()) {
-        val db = Firebase.firestore.collection("Tip")
-        db.document(tipId).get().addOnSuccessListener {
-            val tip = it.toObject(Tip::class.java)
-            if (tip != null) {
-                value = tip
+fun loadCheckContent(tipId: String): State<CheckContent?> {
+    return produceState<CheckContent?>(initialValue = null) {
+        val db = Firebase.firestore.collection("checkContent")
+        try {
+            val document = db.whereEqualTo("tipId", tipId).get().await()
+            if (!document.isEmpty) {
+                value = document.documents[0].toObject(CheckContent::class.java)
             }
+        } catch (e: Exception) {
+            Log.d("TipDetailScreen", e.toString())
         }
-            .addOnFailureListener {
-                // Handle error
-                Log.d("TipDetailScreen", it.toString())
-            }
+    }
+}
+
+
+
+@Composable
+fun loadTip(tipId: String): State<Tip?> {
+    return produceState<Tip?>(initialValue = null) {
+        val db = Firebase.firestore.collection("Tip")
+        try {
+            val document = db.document(tipId).get().await()
+            value = document.toObject(Tip::class.java)
+        } catch (e: Exception) {
+            Log.d("TipDetailScreen", e.toString())
+        }
     }
 }
 

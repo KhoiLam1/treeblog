@@ -147,7 +147,7 @@ fun TipDetailScreen(
                     contentDescription = "Tip Image",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(16 / 9f) // Adjust the aspect ratio as needed
+                        .aspectRatio(16 / 9f)
                         .padding(bottom = 16.dp)
                 )
 

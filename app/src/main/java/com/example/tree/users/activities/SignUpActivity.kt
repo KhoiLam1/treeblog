@@ -106,6 +106,7 @@ class SignUpActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(
     onSignUp: (String, String, String, String, String) -> Unit,
