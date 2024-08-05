@@ -45,10 +45,9 @@ fun UserProfileScreen(
 ) {
     val user by viewModel.user.observeAsState()
     val isLoading by viewModel.isLoading.observeAsState(false)
-    val context = LocalContext.current
 
     if (isLoading) {
-        ProgressDialogUtils.showLoadingDialog(context)
+        ProgressDialogUtils.showLoadingDialog()
     } else {
         ProgressDialogUtils.hideLoadingDialog()
     }

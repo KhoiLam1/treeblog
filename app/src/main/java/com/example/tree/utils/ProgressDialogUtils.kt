@@ -1,31 +1,44 @@
 package com.example.tree.utils
 
-import android.content.Context
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
-import android.util.Log
-import android.view.LayoutInflater
-import androidx.appcompat.app.AlertDialog
-import com.example.tree.R
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 
 object ProgressDialogUtils {
+    private val _isDialogVisible: MutableState<Boolean> = mutableStateOf(false)
 
-    private var progressDialog: AlertDialog? = null
+    val isDialogVisible: Boolean
+        get() = _isDialogVisible.value
 
-    fun showLoadingDialog(context: Context) {
-        Log.d("ProgressDialogUtils", "showLoadingDialog")
-        val builder = AlertDialog.Builder(context)
-        val inflater = LayoutInflater.from(context)
-        builder.setView(inflater.inflate(R.layout.progress_dialog, null))
-        builder.setCancelable(false)
-
-        progressDialog = builder.create()
-        progressDialog?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        progressDialog?.show()
+    fun showLoadingDialog() {
+        _isDialogVisible.value = true
     }
 
     fun hideLoadingDialog() {
-        Log.d("ProgressDialogUtils", "hideLoadingDialog")
-        progressDialog?.dismiss()
+        _isDialogVisible.value = false
+    }
+
+    @Composable
+    fun ProgressDialog() {
+        if (isDialogVisible) {
+            Dialog(onDismissRequest = { hideLoadingDialog() }) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .size(100.dp), // Adjust the size as needed
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
     }
 }

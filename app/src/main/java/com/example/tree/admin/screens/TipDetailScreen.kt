@@ -37,14 +37,21 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.compose.errorLight
+import com.example.compose.onPrimaryContainerLight
+import com.example.compose.onSecondaryContainerLight
+import com.example.compose.primaryLight
+import com.example.compose.scrimLightMediumContrast
+import com.example.compose.secondaryLight
+import com.example.compose.theme_gray_addition
+import com.example.compose.theme_pending
+import com.example.compose.theme_tertiaryFixedDim_mediumContrast
 import com.example.tree.R
 import com.example.tree.admin.activities.MyTopAppBar
 import com.example.tree.models.CheckContent
@@ -98,7 +105,7 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
                 Log.d(tag, "Loading image: $imageUrl")
             },
             placeholder = painterResource(id = R.drawable.sample_tip_pic),
-            contentDescription = stringResource(id = R.string.first_image_of_tip),
+            contentDescription = "First Image of Tip",
             modifier = Modifier
                 .fillMaxWidth()
                 .height(300.dp),
@@ -125,7 +132,7 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.logo_app),
-                    contentDescription = stringResource(id = R.string.this_is_icon_for_illustration),
+                    contentDescription ="This is icon for illustration" ,
                     modifier = Modifier
                         .size(58.dp)
                         .padding(end = 10.dp)
@@ -134,7 +141,7 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
                     Text(
                         text = checkContent?.response ?: "No response from AI",
                         fontSize = 14.sp,
-                        color = colorResource(id = R.color.md_theme_tertiaryFixedDim_mediumContrast)
+                        color = theme_tertiaryFixedDim_mediumContrast
                     )
                 }
             }
@@ -149,7 +156,7 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
             ) {
                 Text(
                     text = tip?.title ?: "Title",
-                    color = colorResource(id = R.color.md_theme_scrim),
+                    color = scrimLightMediumContrast,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 7.dp)
@@ -157,7 +164,7 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
 
                 Text(
                     text = tip?.shortDescription ?: "",
-                    color = colorResource(id = R.color.md_theme_onSecondaryContainer),
+                    color = onPrimaryContainerLight,
                     fontSize = 14.sp,
                     modifier = Modifier.padding(top = 12.dp),
                 )
@@ -178,14 +185,14 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
                             painter = painterResource(id = R.drawable.icon_dot),
-                            contentDescription = stringResource(id = R.string.this_is_icon_for_illustration),
+                            contentDescription = "This is icon for illustration",
                             modifier = Modifier
                                 .size(7.dp)
                                 .padding(end = 5.dp)
                         )
                         Text(
                             text = state,
-                            color = colorResource(id = R.color.md_theme_pending),
+                            color = theme_pending,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -194,19 +201,19 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = DateFormat.format("dd MMM yyyy", tip?.createdAt ?: Date()).toString(),
-                            color = colorResource(id = R.color.md_theme_gray_addition),
+                            color = theme_gray_addition,
                             fontSize = 12.sp
                         )
                         Image(
                             painter = painterResource(id = R.drawable.icon_dot),
-                            contentDescription = stringResource(id = R.string.this_is_icon_for_illustration),
+                            contentDescription = "This is icon for illustration",
                             modifier = Modifier
                                 .padding(horizontal = 5.dp)
                                 .size(4.dp)
                         )
                         Text(
                             text = vote_counts.toString() + " upvotes",
-                            color = colorResource(id = R.color.md_theme_gray_addition),
+                            color = theme_gray_addition,
                             fontSize = 12.sp
                         )
                     }
@@ -231,13 +238,13 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
                 ) {
                     Text(
                         text = user.fullName ?: "",
-                        color = colorResource(id = R.color.md_theme_secondary),
+                        color = secondaryLight,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = stringResource(id = R.string.store_name),
-                        color = colorResource(id = R.color.md_theme_secondary),
+                        text = "Plant writer",
+                        color = secondaryLight,
                         fontSize = 12.sp
                     )
                 }
@@ -245,7 +252,7 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
 
             Text(
                 text = tip?.content ?: "",
-                color = colorResource(id = R.color.md_theme_onSecondaryContainer),
+                color = onSecondaryContainerLight,
                 fontSize = 14.sp,
                 modifier = Modifier.padding(top = 12.dp),
             )
@@ -265,7 +272,7 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
                 Button(
                     onClick = { rejectTip(navController, tipId, context) },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = colorResource(id = R.color.md_theme_error)
+                        containerColor = errorLight
                     )
                 ) {
                     Icon(
@@ -275,7 +282,7 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
                         modifier = Modifier.padding(end = 4.dp)
                     )
                     Text(
-                        text = stringResource(id = R.string.reject),
+                        text = "Reject",
                         color = Color.White,
                         fontSize = 15.sp
                     )
@@ -284,7 +291,7 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
                 Button(
                     onClick = { approveTip(navController, tipId, context) },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = colorResource(id = R.color.md_theme_primary)
+                        containerColor = primaryLight
                     )
                 ) {
                     Icon(
@@ -294,7 +301,7 @@ fun TipDetailScreen(tipId: String, navController: NavController) {
                         modifier = Modifier.padding(end = 4.dp)
                     )
                     Text(
-                        text = stringResource(id = R.string.approve),
+                        text = "Approve",
                         color = Color.White,
                         fontSize = 15.sp
                     )
