@@ -164,7 +164,7 @@ fun TipDetailScreen(
                         if (isPlaying) {
                             textToSpeechHelper.stop()
                         } else {
-                            textToSpeechHelper.speak(tip.title, "Author", tip.content)
+                            textToSpeechHelper.speak(tip.title, author.writerName, tip.content)
                         }
                         isPlaying = !isPlaying
                     }) {
