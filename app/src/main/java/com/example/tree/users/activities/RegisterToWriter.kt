@@ -3,6 +3,7 @@ package com.example.tree.users.activities
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -57,7 +58,7 @@ class RegisterToWriterActivity : ComponentActivity() {
             // Handle toast messages in Compose
             LaunchedEffect(showToast) {
                 showToast?.let { (message, type) ->
-                    CustomToast.show(this@RegisterToWriterActivity, message, type)
+                    Toast.makeText(this@RegisterToWriterActivity, message, Toast.LENGTH_SHORT).show()
                     showToast = null // Reset after showing
                 }
             }
@@ -98,9 +99,9 @@ class RegisterToWriterActivity : ComponentActivity() {
             if (task.isSuccessful) {
                 val downloadUri = task.result.toString()
                 onUploadSuccess(downloadUri)
-                CustomToast.show(this, "Image uploaded successfully", ToastType.SUCCESS)
+                Toast.makeText(this, "Image uploaded successfully", Toast.LENGTH_SHORT).show()
             } else {
-                CustomToast.show(this, "Failed to upload image", ToastType.FAILURE)
+                Toast.makeText(this, "Failed to upload image", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -123,7 +124,7 @@ class RegisterToWriterActivity : ComponentActivity() {
                 userRepository.updateAvatar(userId, avatarUrl)
 
                 withContext(Dispatchers.Main) {
-                    CustomToast.show(this@RegisterToWriterActivity, "Writer created successfully", ToastType.SUCCESS)
+                    Toast.makeText(this@RegisterToWriterActivity, "Writer created successfully", Toast.LENGTH_SHORT).show()
                     Firebase.auth.signOut()
                     val intent = Intent(this@RegisterToWriterActivity, SignInActivity::class.java)
                     startActivity(intent)
@@ -131,7 +132,7 @@ class RegisterToWriterActivity : ComponentActivity() {
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    CustomToast.show(this@RegisterToWriterActivity, "Failed to create writer: ${e.message}", ToastType.FAILURE)
+                    Toast.makeText(this@RegisterToWriterActivity, "Failed to create writer: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
